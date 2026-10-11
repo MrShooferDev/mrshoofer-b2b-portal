@@ -55,7 +55,11 @@
                     success: function(response, textStatus, xhr) {
                         // Check if authentication is required
                         if (response && response.requiresAuth) {
-                            showLoginModal(response.returnUrl);
+                            var openedSheet = window.MrsLoginSheet && window.MrsLoginSheet.open({
+                                returnUrl: response.returnUrl,
+                                message: 'برای ثبت بلیط ابتدا وارد حساب کاربری خود شوید'
+                            });
+                            if (!openedSheet) showLoginModal(response.returnUrl);
                             return;
                         }
                         // Check if insufficient funds

@@ -1,0 +1,143 @@
+/* Login bottom sheet — mobile slides up from the bottom, desktop is a centered card. */
+.login-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.login-sheet[hidden] {
+  display: none;
+}
+
+.login-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.login-sheet__panel {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: var(--card, #fff);
+  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.18);
+  transform: translateY(100%);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  outline: none;
+}
+
+.login-sheet.is-open .login-sheet__backdrop {
+  opacity: 1;
+}
+
+.login-sheet.is-open .login-sheet__panel {
+  transform: translateY(0);
+}
+
+.login-sheet__grabber {
+  width: 2.5rem;
+  height: 0.3rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 999px;
+  background: #d4d4d8;
+}
+
+.login-sheet__close {
+  position: absolute;
+  top: 0.75rem;
+  inset-inline-end: 0.75rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: #52525b;
+  font-size: 1.1rem;
+}
+
+.login-sheet__close:hover {
+  background: #e4e4e7;
+}
+
+.login-sheet__head {
+  margin-bottom: 1.25rem;
+}
+
+.login-sheet__head img {
+  display: block;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+.login-sheet__title {
+  margin-bottom: 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.login-sheet__subtitle {
+  margin-bottom: 0;
+  color: var(--muted-foreground, #71717a);
+}
+
+.login-sheet__error {
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.login-sheet__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.9rem;
+}
+
+body.login-sheet-open {
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .login-sheet {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .login-sheet__panel {
+    padding: 1.75rem 2rem 2rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.22);
+    transform: translateY(1.5rem) scale(0.98);
+    opacity: 0;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease;
+  }
+
+  .login-sheet.is-open .login-sheet__panel {
+    transform: none;
+    opacity: 1;
+  }
+
+  .login-sheet__grabber {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-sheet__backdrop,
+  .login-sheet__panel {
+    transition: none;
+  }
+}

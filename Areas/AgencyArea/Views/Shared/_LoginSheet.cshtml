@@ -1,0 +1,73 @@
+@*
+  Login bottom sheet — opened instead of navigating to /Auth/Login.
+  Rendered only for anonymous users; driven by wwwroot/js/login-sheet.js.
+*@
+@{
+	var loginUrl = Url.Action("Login", "Auth", new { area = "AgencyArea" });
+	var otpUrl = Url.Action("Loginotp", "Auth", new { area = "AgencyArea" });
+	var protectedPaths = string.Join(",", new[]
+	{
+		Url.Action("Index", "TicketInfo", new { area = "AgencyArea" }),
+		Url.Action("Index", "Employees", new { area = "AgencyArea" }),
+		Url.Action("Index", "OfficialInvoices", new { area = "AgencyArea" }),
+		Url.Action("Index", "Analytics", new { area = "AgencyArea" }),
+		Url.Action("Index", "Agency", new { area = "AgencyArea" }),
+	}.Where(p => !string.IsNullOrEmpty(p)));
+}
+<div class="login-sheet" id="loginSheet" hidden
+	 data-login-url="@loginUrl"
+	 data-otp-url="@otpUrl"
+	 data-protected-paths="@protectedPaths">
+	<div class="login-sheet__backdrop" data-login-sheet-close></div>
+	<section class="login-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="loginSheetTitle" tabindex="-1">
+		<div class="login-sheet__grabber" aria-hidden="true"></div>
+		<button type="button" class="login-sheet__close" data-login-sheet-close aria-label="بستن">
+			<i class="ti ti-x" aria-hidden="true"></i>
+		</button>
+
+		<div class="login-sheet__head">
+			<img src="~/logo_full_b.png" alt="مسترشوفر" width="150" height="34" />
+			<h2 class="login-sheet__title" id="loginSheetTitle">به پنل سازمانی خوش آمدید</h2>
+			<p class="login-sheet__subtitle" data-login-sheet-message>برای ورود، اطلاعات کاربر را وارد کنید</p>
+		</div>
+
+		<form class="login-sheet__form" method="post" action="@loginUrl" novalidate>
+			@Html.AntiForgeryToken()
+			<input type="hidden" name="ReturnUrl" value="" />
+
+			<div class="login-sheet__error text-danger" role="alert" hidden data-login-sheet-error></div>
+
+			<div class="mb-3">
+				<label class="form-label" for="loginSheetUsername">نام کاربری</label>
+				<input class="form-control" id="loginSheetUsername" name="Username" type="text" autocomplete="username" placeholder="نام کاربری را وارد کنید" required />
+			</div>
+
+			<div class="mb-3">
+				<div class="d-flex justify-content-between">
+					<label class="form-label" for="loginSheetPassword">رمز عبور</label>
+					<a href="/Auth/ForgotPasswordBasic"><small>فراموش کرده‌اید؟</small></a>
+				</div>
+				<div class="input-group input-group-merge">
+					<input class="form-control" id="loginSheetPassword" name="Password" type="password" autocomplete="current-password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" required />
+					<button type="button" class="input-group-text cursor-pointer" data-login-sheet-toggle-password aria-label="نمایش رمز عبور">
+						<i class="ti ti-eye-off" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
+
+			<div class="mb-3 d-flex justify-content-between align-items-center">
+				<div class="form-check mb-0">
+					<input class="form-check-input" type="checkbox" id="loginSheetRemember" name="RemmemberMe" value="true" />
+					<input type="hidden" name="RemmemberMe" value="false" />
+					<label class="form-check-label" for="loginSheetRemember">مرا به خاطر بسپار</label>
+				</div>
+				<a href="@otpUrl" data-login-sheet-otp><small>ورود با رمز یکبارمصرف</small></a>
+			</div>
+
+			<button class="btn btn-primary w-100 login-sheet__submit" type="submit">
+				<span class="login-sheet__submit-label">ورود به سیستم</span>
+				<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+			</button>
+		</form>
+	</section>
+</div>

@@ -7,6 +7,7 @@
     var showFrontNavbar = ViewData["showFrontNavbar"] is bool showNavFlag && showNavFlag;
     // Panel pages: show logo navbar on mobile; Index keeps full navbar.
     var mobileOnlyNavbar = isSideMenu && !showFrontNavbar;
+    var showLoginSheet = User?.Identity?.IsAuthenticated != true;
     if (isSideMenu)
     {
         ViewData["menuFixed"] = ViewData["menuFixed"] ?? "layout-menu-fixed";
@@ -23,6 +24,10 @@
     {
         <link rel="stylesheet" href="~/css/front-side-menu.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/fluent-color-icons.css" asp-append-version="true" />
+    }
+    @if (showLoginSheet)
+    {
+        <link rel="stylesheet" href="~/css/login-sheet.css" asp-append-version="true" />
     }
     @RenderSection("PageStyles", required: false)
 }
@@ -50,6 +55,10 @@
     @if (isSideMenu)
     {
         <script src="~/js/front-side-menu.js" asp-append-version="true"></script>
+    }
+    @if (showLoginSheet)
+    {
+        <script src="~/js/login-sheet.js" asp-append-version="true"></script>
     }
     @RenderSection("PageScripts", required: false)
     @if (TempData["NeedFinancialInfo"] as bool? == true)
@@ -89,4 +98,9 @@ else
     @await Html.PartialAsync("Sections/Navbar/_NavbarFront")
     @RenderBody()
     @await Html.PartialAsync("Sections/Footer/_FooterFront")
+}
+
+@if (showLoginSheet)
+{
+    @await Html.PartialAsync("_LoginSheet")
 }
