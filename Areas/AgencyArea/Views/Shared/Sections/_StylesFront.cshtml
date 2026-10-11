@@ -47,3 +47,217 @@
   <link rel="stylesheet" href="~/css/shadcn-bridge.css" asp-append-version="true" />
   <link rel="stylesheet" href="~/css/front-palette.css" asp-append-version="true" />
 </environment>
+
+<style id="front-critical-styles">
+  /* Home hero — first paint: contain art, wash overlays, search above art */
+  .landing-hero {
+    position: relative !important;
+    isolation: isolate;
+    background: transparent !important;
+    overflow: visible;
+  }
+
+  .landing-hero-stage {
+    position: relative !important;
+    isolation: isolate;
+    z-index: 0;
+    min-height: clamp(17rem, 42vw, 26rem);
+    padding-top: 4.25rem;
+    padding-bottom: 6.5rem;
+    background-color: #e8eef5;
+    overflow: hidden !important;
+  }
+
+  .landing-hero-stage-art,
+  .trips-search-hero-art {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none;
+    z-index: 0 !important;
+  }
+
+  .landing-hero-stage-art picture,
+  .trips-search-hero-art picture {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .landing-hero-stage-art-img,
+  .trips-search-hero-art img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    object-fit: cover !important;
+    object-position: 72% 78%;
+    z-index: 0 !important;
+  }
+
+  .landing-hero-stage-art-img {
+    opacity: 0;
+  }
+
+  .landing-hero-stage-art-img.is-active {
+    opacity: 1;
+  }
+
+  /* Real overlay nodes — paint with first HTML (no wait for IndexPage.css) */
+  .landing-hero-stage-wash {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.42) 0%,
+      rgba(255, 255, 255, 0.12) 32%,
+      rgba(248, 247, 250, 0.28) 72%,
+      rgba(255, 255, 255, 0.55) 100%
+    );
+  }
+
+  .landing-hero-stage-fade {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: clamp(2.5rem, 7vw, 4rem) !important;
+    z-index: 2 !important;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.28) 40%,
+      rgba(255, 255, 255, 0.75) 75%,
+      #fff 100%
+    );
+  }
+
+  .landing-hero-stage:has(.landing-hero-stage-wash)::before,
+  .landing-hero-stage:has(.landing-hero-stage-fade)::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .landing-hero-stage-content {
+    position: relative;
+    z-index: 3;
+  }
+
+  .landing-hero-search-wrap {
+    position: relative !important;
+    z-index: 4 !important;
+    margin-top: clamp(-3.75rem, -7vw, -2.75rem);
+    margin-bottom: 1.25rem;
+  }
+
+  .landing-hero .hero-search-panel {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid rgba(67, 89, 113, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Trips hero stays overflow:visible so the city dropdowns can escape it */
+  .trips-page-shell .trips-search-hero {
+    position: relative;
+  }
+
+  @@media (max-width: 767.98px) {
+    .landing-hero-stage {
+      min-height: 16.5rem;
+      padding-top: 3.75rem;
+      padding-bottom: 5.25rem;
+    }
+
+    .landing-hero-search-wrap {
+      margin-top: -2.25rem;
+      margin-bottom: 0.75rem;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  @@media (min-width: 992px) {
+    .landing-hero-stage {
+      min-height: clamp(20rem, 36vw, 28rem);
+      padding-top: 5.5rem;
+      padding-bottom: 7rem;
+    }
+
+    .landing-hero-search-wrap {
+      margin-top: -3.75rem;
+    }
+  }
+
+  .layout-front-with-menu .layout-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .layout-front-with-menu .layout-menu.front-side-menu {
+    flex: 0 0 auto;
+  }
+
+  .layout-front-with-menu .layout-page {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  @@media (max-width: 991.98px) {
+    .layout-front-with-menu .layout-menu.front-side-menu {
+      position: fixed !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      height: 100% !important;
+      max-height: 100dvh !important;
+      width: min(18.5rem, 88vw) !important;
+      max-width: min(18.5rem, 88vw) !important;
+      z-index: 1030;
+    }
+
+    [dir='rtl'] .layout-front-with-menu .layout-menu.front-side-menu {
+      right: 0 !important;
+      left: auto !important;
+      transform: translate3d(100%, 0, 0);
+    }
+
+    html.layout-menu-expanded .layout-front-with-menu .layout-menu.front-side-menu {
+      transform: translate3d(0, 0, 0) !important;
+    }
+  }
+
+  @@media (min-width: 992px) {
+    .layout-front-with-menu .layout-menu.front-side-menu {
+      position: fixed !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      right: 0 !important;
+      left: auto !important;
+      width: 16.25rem !important;
+      max-width: 16.25rem !important;
+      height: 100% !important;
+      z-index: 1030;
+      transform: none !important;
+    }
+
+    [dir='rtl'].layout-menu-fixed .layout-front-with-menu .layout-page,
+    html.layout-menu-fixed .layout-front-with-menu .layout-page {
+      margin-right: 16.25rem !important;
+      margin-left: 0 !important;
+      width: calc(100% - 16.25rem) !important;
+      max-width: calc(100% - 16.25rem) !important;
+    }
+  }
+</style>

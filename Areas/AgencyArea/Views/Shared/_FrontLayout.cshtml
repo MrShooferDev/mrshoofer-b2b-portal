@@ -16,15 +16,15 @@
 }
 
 @section VendorStyles {
-    @RenderSection("VendorStyles", required: false)
-}
-
-@section PageStyles {
     @if (isSideMenu)
     {
         <link rel="stylesheet" href="~/css/front-side-menu.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/fluent-color-icons.css" asp-append-version="true" />
     }
+    @RenderSection("VendorStyles", required: false)
+}
+
+@section PageStyles {
     @if (showLoginSheet)
     {
         <link rel="stylesheet" href="~/css/login-sheet.css" asp-append-version="true" />

@@ -481,7 +481,8 @@ html.layout-navbar-fixed .layout-wrapper.layout-front-with-menu .landing-hero {
 }
 
 /* Soft white merge at bottom — light enough that the car stays fully visible */
-.landing-hero-stage::after {
+.landing-hero-stage-fade,
+.landing-hero-stage:not(:has(.landing-hero-stage-fade))::after {
   content: "";
   position: absolute;
   left: 0;
@@ -502,7 +503,8 @@ html.layout-navbar-fixed .layout-wrapper.layout-front-with-menu .landing-hero {
 }
 
 /* Soft wash like mrshoofer.com — keep car readable */
-.landing-hero-stage::before {
+.landing-hero-stage-wash,
+.landing-hero-stage:not(:has(.landing-hero-stage-wash))::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -515,6 +517,12 @@ html.layout-navbar-fixed .layout-wrapper.layout-front-with-menu .landing-hero {
     rgba(248, 247, 250, 0.28) 72%,
     rgba(255, 255, 255, 0.55) 100%
   );
+}
+
+.landing-hero-stage:has(.landing-hero-stage-wash)::before,
+.landing-hero-stage:has(.landing-hero-stage-fade)::after {
+  content: none;
+  display: none;
 }
 
 .landing-hero-stage-content {

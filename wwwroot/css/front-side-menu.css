@@ -3,25 +3,9 @@
    Structure/behavior from bg-menu-theme; colors from tokens.css.
    ───────────────────────────────────────────────────────────────────────────── */
 
-@view-transition {
-  navigation: auto;
-}
-
-.landing-hero-stage-art-img.is-active {
-  view-transition-name: trip-hero-art;
-}
-
-::view-transition-group(trip-hero-art) {
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(root),
-  ::view-transition-group(trip-hero-art) {
-    animation-duration: 1ms;
-  }
-}
+/* Cross-document view transitions removed: shared trip-hero-art name
+   made the trips hero snapshot float over Home sections (no wash/filter)
+   when opening Home via the bottom + button. */
 
 .layout-front-with-menu {
   --fsm-width: 16.25rem;
