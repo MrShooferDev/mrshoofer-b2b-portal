@@ -18,15 +18,32 @@
 .jdp-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1050;
+  /* Above mobile city drawers (1080–2000) so date opens even if a sheet is mid-close */
+  z-index: 2100;
   background: var(--jdp-overlay);
   display: none;
 }
 .jdp-overlay.jdp-open { display: block; }
 
+@keyframes jdp-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes jdp-calendar-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 0.65rem)) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 .jdp-container {
   position: fixed;
-  z-index: 1051;
+  z-index: 2101;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -46,6 +63,8 @@
   color: var(--jdp-ink);
 }
 .jdp-container.jdp-open { display: flex; }
+.jdp-overlay.jdp-open { animation: jdp-overlay-in 180ms ease-out both; }
+.jdp-container.jdp-open { animation: jdp-calendar-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 .jdp-topbar {
   display: flex;
@@ -301,4 +320,11 @@
 @media (max-width: 640px) {
   .jdp-container { width: min(95vw, 380px); }
   .jdp-month { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jdp-overlay.jdp-open,
+  .jdp-container.jdp-open {
+    animation: none;
+  }
 }

@@ -3,6 +3,26 @@
    Structure/behavior from bg-menu-theme; colors from tokens.css.
    ───────────────────────────────────────────────────────────────────────────── */
 
+@view-transition {
+  navigation: auto;
+}
+
+.landing-hero-stage-art-img.is-active {
+  view-transition-name: trip-hero-art;
+}
+
+::view-transition-group(trip-hero-art) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-group(trip-hero-art) {
+    animation-duration: 1ms;
+  }
+}
+
 .layout-front-with-menu {
   --fsm-width: 16.25rem;
   --fsm-pad-x: 0.75rem;
@@ -10,7 +30,7 @@
   --fsm-bg-deep: var(--muted, oklch(0.97 0 0));
   --fsm-border: var(--sidebar-border, var(--border, oklch(0.922 0 0)));
   --fsm-fg: var(--sidebar-foreground, var(--foreground, oklch(0.145 0 0)));
-  --fsm-muted: var(--muted-foreground, oklch(0.556 0 0));
+  --fsm-muted: oklch(0.36 0 0);
   --fsm-accent: var(--sidebar-accent, var(--accent, oklch(0.97 0 0)));
   --fsm-active: var(--primary, #000);
   --fsm-active-fg: var(--primary-foreground, #fff);
@@ -49,6 +69,48 @@
 .layout-front-with-menu .front-side-menu .app-brand {
   flex: 0 0 auto !important;
   flex-shrink: 0 !important;
+  width: 100%;
+}
+
+#layout-menu.front-side-menu > .app-brand > .layout-menu-toggle {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1;
+  display: inline-grid !important;
+  width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem !important;
+  padding: 0;
+  place-items: center;
+  color: #000 !important;
+  background: var(--fsm-bg-deep) !important;
+  border: 1px solid var(--fsm-border) !important;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#layout-menu.front-side-menu > .app-brand > .layout-menu-toggle:hover {
+  background: var(--fsm-accent) !important;
+  border-color: var(--fsm-border) !important;
+}
+
+#layout-menu.front-side-menu > .app-brand > .layout-menu-toggle:focus-visible {
+  outline: 2px solid var(--sidebar-ring, var(--ring, #595959));
+  outline-offset: 2px;
+}
+
+#layout-menu.front-side-menu > .app-brand > .layout-menu-toggle .front-side-menu-close-icon {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px;
+  min-height: 20px;
+  fill: none;
+  stroke: #000 !important;
+  stroke-linecap: round;
+  stroke-width: 2;
+  flex: 0 0 20px;
 }
 
 .layout-front-with-menu .front-side-menu .menu-inner-shadow {
@@ -96,7 +158,35 @@
 
 .layout-front-with-menu .front-side-menu .menu-link {
   max-width: 100%;
+  min-height: 2.75rem;
+  font-family: font-regular, 'IRANSansX', Tahoma, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
   overflow: hidden;
+}
+
+.layout-front-with-menu .front-side-menu .menu-inner > .menu-item > .menu-link {
+  color: var(--fsm-fg) !important;
+  font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
+  font-weight: 600;
+}
+
+.layout-front-with-menu .front-side-menu .menu-header {
+  padding: 1rem 1rem 0.35rem !important;
+}
+
+.layout-front-with-menu .front-side-menu .menu-header-text {
+  color: var(--fsm-muted) !important;
+  font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.layout-front-with-menu .front-side-menu .menu-link:focus-visible,
+.layout-front-with-menu .front-side-menu .front-side-menu-user__btn:focus-visible {
+  outline: 2px solid var(--sidebar-ring, var(--ring, #595959));
+  outline-offset: 2px;
 }
 
 .layout-front-with-menu .front-side-menu .menu-link > div:not(.badge) {
@@ -161,6 +251,45 @@ html[dir='rtl']
   border-radius: var(--fsm-radius-sm) !important;
 }
 
+/* Selected groups use the same restrained tint as expanded groups, not the leaf selection */
+html[dir='rtl']
+  .layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.active
+  > .menu-link.menu-toggle,
+.layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.active
+  > .menu-link.menu-toggle {
+  background: color-mix(in oklch, var(--fsm-fg) 2%, var(--fsm-bg)) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: 1px solid color-mix(in oklch, var(--fsm-fg) 6%, var(--fsm-bg)) !important;
+  color: var(--fsm-fg) !important;
+}
+
+html[dir='rtl']
+  .layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.active
+  > .menu-link.menu-toggle
+  .menu-icon:not(.menu-icon-3d),
+.layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.active
+  > .menu-link.menu-toggle
+  .menu-icon:not(.menu-icon-3d) {
+  color: var(--fsm-fg) !important;
+}
+
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item.active > .menu-link:not(.menu-toggle) {
+  background: color-mix(in oklch, var(--fsm-fg) 12%, var(--fsm-bg)) !important;
+}
+
 .layout-front-with-menu
   .front-side-menu.bg-menu-theme.menu-vertical
   > .menu-inner
@@ -168,6 +297,28 @@ html[dir='rtl']
   > .menu-link
   .menu-icon:not(.menu-icon-3d) {
   color: var(--fsm-active-fg) !important;
+}
+
+/* Nested links share a row width and inset, so active states form one column */
+html[dir="rtl"] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link,
+.layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link {
+  display: flex !important;
+  align-items: center;
+  width: auto !important;
+  max-width: 100%;
+  min-height: 2.75rem;
+  font-family: font-regular, 'IRANSansX', Tahoma, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  gap: 0.35rem;
+}
+
+/* Don't let badge ms-auto stretch the sub-item to full menu width */
+.layout-front-with-menu .front-side-menu .menu-sub .menu-link .ms-auto,
+.layout-front-with-menu .front-side-menu .menu-sub .menu-link .menu-badge-new {
+  margin-inline-start: 0.15rem !important;
+  flex: 0 0 auto;
 }
 
 /* Soft nested active — submenu children only */
@@ -183,6 +334,7 @@ html[dir='rtl']
   box-shadow: none !important;
   color: var(--fsm-fg) !important;
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif !important;
+  border-radius: var(--fsm-radius-sm) !important;
 }
 
 .layout-front-with-menu
@@ -198,11 +350,11 @@ html[dir='rtl']
 .layout-front-with-menu .front-side-menu img.menu-icon.menu-icon-3d,
 .layout-front-with-menu .front-side-menu iconify-icon.menu-icon.menu-icon-3d {
   display: block !important;
-  flex: 0 0 1.375rem !important;
-  width: 1.375rem !important; /* 22px */
-  height: 1.375rem !important;
-  min-width: 1.375rem !important;
-  max-width: 1.375rem !important;
+  flex: 0 0 1.5rem !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  min-width: 1.5rem !important;
+  max-width: 1.5rem !important;
   margin: 0 !important;
   margin-inline-end: 0.55rem !important;
   object-fit: contain;
@@ -327,7 +479,7 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
   width: 1.375rem !important;
   font-size: 1.05rem !important;
   margin: 0 !important;
-  margin-inline-end: 0.55rem !important;
+  margin-inline-end: 0 !important; /* gap on .menu-link handles spacing */
   color: var(--fsm-muted);
 }
 
@@ -350,7 +502,7 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
   min-width: 1.375rem !important;
   max-width: 1.375rem !important;
   margin: 0 !important;
-  margin-inline-end: 0.55rem !important;
+  margin-inline-end: 0 !important; /* gap on .menu-link handles spacing */
 }
 
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub > .menu-item > .menu-link::before {
@@ -364,31 +516,22 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 */
 html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link,
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link {
-  margin-inline: 0.875rem !important;
+  margin-inline: 1.5rem !important;
   padding-inline-start: 1rem !important;
   padding-inline-end: 0.85rem !important;
 }
 
-/* Keep a light tree rail aligned with the shared icon column */
-.layout-front-with-menu .front-side-menu .menu-inner > .menu-item.open > .menu-sub {
-  position: relative;
+/* No edge rail on active groups (child selection already marks the branch) */
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item.active.open::before,
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item.active:has(> .menu-sub)::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  background: transparent !important;
 }
 
-.layout-front-with-menu .front-side-menu .menu-inner > .menu-item.open > .menu-sub::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  top: 0.35rem;
-  bottom: 0.35rem;
-  /* 0.875rem margin + 1rem pad + half icon ≈ center of icon column */
-  inset-inline-start: calc(0.875rem + 1rem + 0.6875rem);
-  width: 0;
-  border-inline-start: 1px solid color-mix(in oklch, var(--fsm-fg) 12%, transparent);
-  border-color: color-mix(in oklch, var(--fsm-fg) 12%, transparent) !important;
-}
-
-/* Edge active rail (top-level) — use primary, contain inside panel */
-.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item.active::before {
+/* Leaf active rail only — keep Vuexy bar for non-group items */
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item.active:not(.open):not(:has(> .menu-sub))::before {
   background: var(--fsm-active) !important;
 }
 
@@ -398,12 +541,34 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 }
 
 .layout-front-with-menu .front-side-menu .menu-badge-new {
-  background: #ff8c8c;
+  background: #b42318;
   color: #fff;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1.2;
-  padding: 0.15rem 0.45rem;
+  padding: 0.2rem 0.5rem;
+}
+
+/* Readable, consistent targets despite Vuexy's more specific menu rules */
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item:not(.active) > .menu-link,
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item:not(.active) > .menu-link {
+  color: var(--fsm-fg) !important;
+}
+
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item > .menu-link {
+  min-height: 2.875rem !important;
+  font-size: 0.96875rem !important;
+  font-weight: 600 !important;
+}
+
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-link {
+  min-height: 2.875rem !important;
+  font-size: 0.90625rem !important;
+}
+
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item.active > .menu-link:not(.menu-toggle) {
+  background: color-mix(in oklch, var(--fsm-fg) 10%, var(--fsm-bg)) !important;
+  font-weight: 600 !important;
 }
 
 /* Brand: unlock Vuexy clipped logo box for full mark */
@@ -457,7 +622,7 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
   flex-wrap: wrap;
   gap: 0.35rem;
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0;
   color: var(--fsm-muted);
@@ -893,7 +1058,7 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 
 .layout-front-with-menu .front-side-menu .front-side-menu-user__name {
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   color: var(--fsm-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -902,7 +1067,8 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 
 .layout-front-with-menu .front-side-menu .front-side-menu-user__balance {
   font-family: font-regular, 'IRANSansX', Tahoma, sans-serif;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--fsm-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1151,8 +1317,7 @@ html.layout-menu-fixed.layout-navbar-fixed
     display: none !important;
   }
 
-  .layout-front-with-menu .layout-navbar .layout-menu-toggle,
-  .layout-front-with-menu .front-side-menu .layout-menu-toggle {
+  .layout-front-with-menu .layout-navbar .layout-menu-toggle {
     display: none !important;
   }
 

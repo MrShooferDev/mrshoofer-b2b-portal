@@ -51,7 +51,7 @@ function generateTripCard(Model) {
   const imageUrl = resolveTripImageUrl(Model);
 
   var html = `
-        <div class="card trip-card px-2 px-md-4 py-3 mt-3" style="width: 100%;">
+        <article class="card trip-card${isVipCar ? ' trip-card--vip' : ''} px-2 px-md-4 py-3 mt-3" style="width: 100%;">
 
         <div class="mainbody">
             <div class="topinfo d-flex" style="justify-content: space-between; align-items:center; gap:0.5rem;">
@@ -152,7 +152,7 @@ function generateTripCard(Model) {
             </div>
 
         </div>
-    </div>`;
+    </article>`;
 
   // Return the generated HTML
   return html;

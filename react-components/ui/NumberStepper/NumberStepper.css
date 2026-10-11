@@ -1,0 +1,113 @@
+.ca-stepper {
+  --ca-surface: oklch(1 0 0);
+  --ca-default: oklch(0.94 0.001 286.375);
+  --ca-default-hover: oklch(0.91 0.002 286.375);
+  --ca-foreground: oklch(0.2103 0.0059 285.89);
+  --ca-muted: oklch(0.5517 0.0138 285.94);
+  --ca-accent: oklch(0.6204 0.195 253.83);
+  --ca-font-demibold: font-demi-bold, Tahoma, system-ui, sans-serif;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+.ca-stepper__group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9999px;
+  background-color: var(--ca-default);
+  direction: ltr;
+}
+
+.ca-stepper__group:has(.ca-stepper__input:focus-visible) {
+  outline: 2px solid var(--ca-accent);
+  outline-offset: 2px;
+}
+
+.ca-stepper__button {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  appearance: button;
+  border: 0;
+  border-radius: 9999px;
+  background-color: var(--ca-surface);
+  color: var(--ca-muted);
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow:
+    rgba(0, 0, 0, 0.04) 0 2px 4px 0,
+    rgba(0, 0, 0, 0.06) 0 1px 2px 0,
+    rgba(0, 0, 0, 0.06) 0 0 1px 0;
+  transition-property: background-color, box-shadow, transform;
+  transition-duration: 0.1s, 0.1s, 0.25s;
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1), cubic-bezier(0, 0, 0.2, 1), ease;
+}
+
+.ca-stepper__button:hover:not(:disabled) {
+  color: var(--ca-foreground);
+}
+
+.ca-stepper__button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.ca-stepper__button:disabled {
+  cursor: default;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.ca-stepper__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  transition: color 0.15s;
+}
+
+.ca-stepper__value {
+  isolation: isolate;
+  min-width: 24px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  color: var(--ca-foreground);
+  font-family: var(--ca-font-demibold);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  /* IRANSansX stylistic set that draws Latin digits as Persian digits. */
+  font-feature-settings: "ss02";
+  white-space: nowrap;
+}
+
+.ca-stepper__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: clip;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-stepper__button {
+    transition: none;
+  }
+}

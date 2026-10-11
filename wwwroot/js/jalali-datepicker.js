@@ -101,6 +101,8 @@
     this.onSelect = opts.onSelect || null;
     this.tooltipText = opts.tooltipText || '';
     this.selected = null;
+    // One tap on a day confirms (snappier trip search). Set false to require «تأیید».
+    this.confirmOnDayTap = opts.confirmOnDayTap !== false;
 
     var today = toJalali(new JD());
     if (opts.minDate === 'today') {
@@ -244,6 +246,19 @@
     this.body.appendChild(monthEl);
   };
 
+  JalaliDatepicker.prototype._confirmSelection = function () {
+    if (!this.selected) return false;
+    var formatted = formatJalali(this.selected.y, this.selected.m, this.selected.d);
+    this.input.value = formatted;
+    try {
+      this.input.dispatchEvent(new Event('input', { bubbles: true }));
+      this.input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) { /* ignore */ }
+    if (this.onSelect) this.onSelect(this.selected, formatted);
+    this.close();
+    return true;
+  };
+
   JalaliDatepicker.prototype._bindEvents = function () {
     var self = this;
 
@@ -277,14 +292,13 @@
       };
       self._refreshSelection();
       self.confirmBtn.disabled = false;
+      if (self.confirmOnDayTap) {
+        self._confirmSelection();
+      }
     });
 
     this.confirmBtn.addEventListener('click', function () {
-      if (!self.selected) return;
-      var formatted = formatJalali(self.selected.y, self.selected.m, self.selected.d);
-      self.input.value = formatted;
-      if (self.onSelect) self.onSelect(self.selected, formatted);
-      self.close();
+      self._confirmSelection();
     });
   };
 

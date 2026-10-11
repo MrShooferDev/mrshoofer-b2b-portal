@@ -1,0 +1,120 @@
+.ca-segment {
+  --ca-font-medium: font-medium, Tahoma, system-ui, sans-serif;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 9999px;
+  background: transparent;
+  isolation: isolate;
+  font-family: var(--ca-font-medium);
+}
+
+.ca-segment__indicator {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  z-index: 0;
+  border-radius: 9999px;
+  background: oklch(0.27 0 0);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.12),
+    0 4px 12px rgb(0 0 0 / 0.12);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ca-segment.is-ready .ca-segment__indicator {
+  opacity: 1;
+  transition:
+    translate 200ms ease-out,
+    width 200ms ease-out;
+}
+
+.ca-segment__item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding-inline: 14px;
+  margin: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: oklch(0.5 0 0);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: color 200ms ease-out;
+}
+
+.ca-segment__item:not([aria-checked="true"]):hover:not(:disabled) {
+  color: oklch(0.3 0 0);
+}
+
+.ca-segment__item[aria-checked="true"] {
+  color: #fff;
+}
+
+.ca-segment__item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ca-segment__item:focus-visible {
+  outline: 2px solid oklch(0.55 0.15 265);
+  outline-offset: 2px;
+}
+
+.ca-segment__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+
+.ca-segment__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ca-segment__label {
+  display: inline-grid;
+  grid-template-columns: 0fr;
+  min-width: 0;
+  opacity: 0;
+  transition:
+    grid-template-columns 200ms ease-out,
+    opacity 200ms ease-out;
+}
+
+.ca-segment__label-text {
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+  padding-inline-start: 0;
+  transition: padding-inline-start 200ms ease-out;
+}
+
+.ca-segment__item[aria-checked="true"] .ca-segment__label {
+  grid-template-columns: 1fr;
+  opacity: 1;
+}
+
+.ca-segment__item[aria-checked="true"] .ca-segment__label-text {
+  padding-inline-start: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-segment__item,
+  .ca-segment__label,
+  .ca-segment__label-text,
+  .ca-segment.is-ready .ca-segment__indicator {
+    transition: none;
+  }
+}

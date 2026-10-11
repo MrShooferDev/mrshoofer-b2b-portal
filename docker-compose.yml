@@ -1,13 +1,27 @@
-version: '3.9'
+# Agency standalone. For the full platform, use infra/docker-compose.yml.
+#
+#   cp .env.example .env   # fill secrets
+#   docker compose up --build
+
+name: agency-standalone
+
 services:
   web:
-    container_name: mrshoofer-enterprise
     build:
       context: .
       dockerfile: Dockerfile
+    image: shoofer-agency:standalone
     restart: unless-stopped
-    ports:
-      - '127.0.0.1:5000:5000'
+    env_file:
+      - path: .env
+        required: true
     environment:
-      - ASPNETCORE_URLS=http://0.0.0.0:5000
-      - ASPNETCORE_ENVIRONMENT=Production
+      DOTNET_PRINT_TELEMETRY_MESSAGE: "false"
+    ports:
+      - "127.0.0.1:${AGENCY_HOST_PORT:-5005}:5005"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/5005'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s

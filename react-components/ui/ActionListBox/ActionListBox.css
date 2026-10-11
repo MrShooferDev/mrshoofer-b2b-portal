@@ -1,0 +1,177 @@
+.ca-listbox {
+  --ca-surface: oklch(1 0 0);
+  --ca-default: oklch(0.94 0.001 286.375);
+  --ca-foreground: oklch(0.2103 0.0059 285.89);
+  --ca-muted: oklch(0.5517 0.0138 285.94);
+  --ca-accent: oklch(0.6204 0.195 253.83);
+  --ca-danger: oklch(0.6532 0.2328 25.74);
+  --ca-danger-soft: oklch(0.6532 0.2328 25.74 / 0.1);
+  --ca-separator: oklch(0.92 0.004 286.32);
+  --ca-font: font-regular, Tahoma, system-ui, sans-serif;
+  --ca-font-medium: font-medium, Tahoma, system-ui, sans-serif;
+
+  position: relative;
+  width: 256px;
+  border-radius: 24px;
+  background-color: var(--ca-surface);
+  color: var(--ca-foreground);
+  font-family: var(--ca-font);
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0;
+  box-shadow:
+    rgba(0, 0, 0, 0.04) 0 2px 4px 0,
+    rgba(0, 0, 0, 0.06) 0 1px 2px 0,
+    rgba(0, 0, 0, 0.06) 0 0 1px 0;
+}
+
+.ca-listbox__list {
+  position: relative;
+  width: 100%;
+  padding: 8px;
+  overflow: clip;
+}
+
+.ca-listbox__section {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+}
+
+.ca-listbox__separator + .ca-listbox__section {
+  margin-top: 4px;
+}
+
+.ca-listbox__header {
+  width: 100%;
+  padding: 6px 8px 4px;
+  color: var(--ca-muted);
+  font-family: var(--ca-font-medium);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ca-listbox__item {
+  position: relative;
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition-property: transform, box-shadow, background-color;
+  transition-duration: 0.25s, 0.15s, 0.15s;
+  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1), cubic-bezier(0, 0, 0.2, 1), ease;
+}
+
+.ca-listbox__item:hover {
+  background-color: var(--ca-default);
+}
+
+.ca-listbox__item--danger:hover {
+  background-color: var(--ca-danger-soft);
+}
+
+.ca-listbox__item:active {
+  transform: scale(0.98);
+}
+
+.ca-listbox__item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ca-accent);
+}
+
+.ca-listbox__item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ca-listbox__icon {
+  height: 32px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1px;
+  color: var(--ca-muted);
+}
+
+.ca-listbox__icon svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.ca-listbox__item--danger .ca-listbox__icon,
+.ca-listbox__item--danger .ca-listbox__label {
+  color: var(--ca-danger);
+}
+
+.ca-listbox__text {
+  display: flex;
+  flex-flow: column nowrap;
+  min-width: 0;
+}
+
+.ca-listbox__label {
+  width: fit-content;
+  font-family: var(--ca-font-medium);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.ca-listbox__description {
+  color: var(--ca-muted);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: break-word;
+}
+
+.ca-listbox__kbd {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  margin-inline-start: auto;
+  padding: 0 8px;
+  border-radius: 8px;
+  color: var(--ca-muted);
+  font-family: var(--ca-font-medium);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.ca-listbox__kbd-keys {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  direction: ltr;
+}
+
+.ca-listbox__kbd-mod {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin-right: 2px;
+  text-decoration: none;
+}
+
+.ca-listbox__separator {
+  flex-shrink: 0;
+  width: 94%;
+  height: 1px;
+  margin: 4px 3% 0;
+  border-radius: 4px;
+  background-color: var(--ca-separator);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-listbox__item {
+    transition: none;
+  }
+}

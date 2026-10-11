@@ -83,6 +83,14 @@ var pgsqlConnString = builder.Configuration.GetConnectionString(connStringName)
     ?? builder.Configuration.GetConnectionString("production")
     ?? builder.Configuration.GetConnectionString("development");
 
+// Fail faster in Development when the remote Postgres host is down
+if (builder.Environment.IsDevelopment()
+    && !string.IsNullOrWhiteSpace(pgsqlConnString)
+    && pgsqlConnString.IndexOf("Timeout=", StringComparison.OrdinalIgnoreCase) < 0)
+{
+  pgsqlConnString += ";Timeout=5;Command Timeout=5";
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
   options.UseNpgsql(pgsqlConnString);
@@ -187,78 +195,89 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // Ensure a default admin account exists for admin panel login.
+// In Development, don't hard-crash if the remote DB is temporarily unreachable
+// (VPN / firewall / host down) so local UI work can still run.
 using (var scope = app.Services.CreateScope())
 {
-  var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-  await db.Database.MigrateAsync();
-
-  var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-  var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-  const string adminUsername = "mrshoofer1405";
-  const string adminPassword = "qazwsx";
-
-  var adminUser = await userManager.FindByNameAsync(adminUsername);
-
-  if (adminUser == null)
+  var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+  try
   {
-    adminUser = new IdentityUser
-    {
-      UserName = adminUsername
-    };
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
 
-    var createResult = await userManager.CreateAsync(adminUser, adminPassword);
-    if (!createResult.Succeeded)
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    const string adminUsername = "mrshoofer1405";
+    const string adminPassword = "qazwsx";
+
+    var adminUser = await userManager.FindByNameAsync(adminUsername);
+
+    if (adminUser == null)
     {
-      throw new Exception($"Failed to create default admin user '{adminUsername}'.");
-    }
-  }
-  else
-  {
-    var hasPassword = await userManager.HasPasswordAsync(adminUser);
-    if (hasPassword)
-    {
-      var removePasswordResult = await userManager.RemovePasswordAsync(adminUser);
-      if (!removePasswordResult.Succeeded)
+      adminUser = new IdentityUser
       {
-        throw new Exception($"Failed to reset password for default admin user '{adminUsername}'.");
+        UserName = adminUsername
+      };
+
+      var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+      if (!createResult.Succeeded)
+      {
+        throw new Exception($"Failed to create default admin user '{adminUsername}'.");
+      }
+    }
+    else
+    {
+      var hasPassword = await userManager.HasPasswordAsync(adminUser);
+      if (hasPassword)
+      {
+        var removePasswordResult = await userManager.RemovePasswordAsync(adminUser);
+        if (!removePasswordResult.Succeeded)
+        {
+          throw new Exception($"Failed to reset password for default admin user '{adminUsername}'.");
+        }
+      }
+
+      var addPasswordResult = await userManager.AddPasswordAsync(adminUser, adminPassword);
+      if (!addPasswordResult.Succeeded)
+      {
+        throw new Exception($"Failed to set password for default admin user '{adminUsername}'.");
       }
     }
 
-    var addPasswordResult = await userManager.AddPasswordAsync(adminUser, adminPassword);
-    if (!addPasswordResult.Succeeded)
+    // Keep compatibility with both role-based and claim-based checks.
+    if (!await roleManager.RoleExistsAsync("Admin"))
     {
-      throw new Exception($"Failed to set password for default admin user '{adminUsername}'.");
+      var roleResult = await roleManager.CreateAsync(new IdentityRole("Admin"));
+      if (!roleResult.Succeeded)
+      {
+        throw new Exception("Failed to create Admin role.");
+      }
+    }
+
+    if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+      var addRoleResult = await userManager.AddToRoleAsync(adminUser, "Admin");
+      if (!addRoleResult.Succeeded)
+      {
+        throw new Exception($"Failed to assign Admin role to '{adminUsername}'.");
+      }
+    }
+
+    var claims = await userManager.GetClaimsAsync(adminUser);
+    if (!claims.Any(c => c.Type == "Role" && c.Value == "Admin"))
+    {
+      var claimResult = await userManager.AddClaimAsync(adminUser, new System.Security.Claims.Claim("Role", "Admin"));
+      if (!claimResult.Succeeded)
+      {
+        throw new Exception($"Failed to assign Admin claim to '{adminUsername}'.");
+      }
     }
   }
-
-  // Keep compatibility with both role-based and claim-based checks.
-  if (!await roleManager.RoleExistsAsync("Admin"))
+  catch (Exception ex) when (app.Environment.IsDevelopment())
   {
-    var roleResult = await roleManager.CreateAsync(new IdentityRole("Admin"));
-    if (!roleResult.Succeeded)
-    {
-      throw new Exception("Failed to create Admin role.");
-    }
-  }
-
-  if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-  {
-    var addRoleResult = await userManager.AddToRoleAsync(adminUser, "Admin");
-    if (!addRoleResult.Succeeded)
-    {
-      throw new Exception($"Failed to assign Admin role to '{adminUsername}'.");
-    }
-  }
-
-  var claims = await userManager.GetClaimsAsync(adminUser);
-  if (!claims.Any(c => c.Type == "Role" && c.Value == "Admin"))
-  {
-    var claimResult = await userManager.AddClaimAsync(adminUser, new System.Security.Claims.Claim("Role", "Admin"));
-    if (!claimResult.Succeeded)
-    {
-      throw new Exception($"Failed to assign Admin claim to '{adminUsername}'.");
-    }
+    logger.LogWarning(ex,
+      "Skipping DB migrate/admin seed — database unreachable. UI will start, but auth/data features may fail until Postgres is available.");
   }
 }
 

@@ -1,0 +1,22 @@
+@{
+  Layout = null;
+  var current = Context.Request.Query["current"].ToString();
+  var initialSection = Context.Request.Query["section"].ToString();
+  var collapsed = Context.Request.Query["collapsed"].ToString() == "true" ? "true" : "false";
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="light" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>پنل شوفر</title>
+  <link rel="stylesheet" href="~/fonts/farsi-fonts/font.css" />
+  <link rel="stylesheet" href="~/js/react/heroui.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/js/react/create-account.css" asp-append-version="true" />
+</head>
+<body class="ca-al-page bg-background text-foreground">
+  <div class="ca-app-layout-mount" data-ca-app-layout data-default-current="@current" data-default-section="@initialSection" data-default-collapsed="@collapsed"></div>
+
+  <script src="~/js/react/create-account.js" asp-append-version="true"></script>
+</body>
+</html>

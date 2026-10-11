@@ -426,6 +426,12 @@ deploy/deploy.env
 # local deploy secrets
 .env.deploy
 
+# Standalone Docker / local runtime secrets (keep .env.example)
+.env
+.env.local
+.env.*.local
+!.env.example
+
 # keep shared VS Code terminal deploy help
 .vscode/*
 !.vscode/settings.json

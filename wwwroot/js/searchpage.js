@@ -183,40 +183,11 @@ function forceHideCityPickerMenu(menu) {
   }
 }
 
-function closeAllDesktopCityPickers() {
-  closeCityPicker(document.getElementById('origin_input'));
-  closeCityPicker(document.getElementById('destination_input'));
-  // Belt-and-suspenders: any leftover open city menus (stale Bootstrap instance / portal).
-  document.querySelectorAll('.dropdown-menu.origin_location.show, .dropdown-menu.destination_location.show')
-    .forEach(forceHideCityPickerMenu);
-  document.body.classList.remove('city-picker-open');
-}
-
-function openDesktopCityPicker(input) {
-  if (!input || isMobileCityPicker()) return;
-
-  const menu = input.parentElement && input.parentElement.querySelector('.dropdown-menu');
-  if (menu && menu.classList.contains('show')) return;
-
-  const otherInput = input.id === 'origin_input'
-    ? document.getElementById('destination_input')
-    : document.getElementById('origin_input');
-  if (otherInput) closeCityPicker(otherInput);
-
-  try {
-    cityPickerDropdown(input).show();
-  } catch { /* Bootstrap initializes on first interaction */ }
-}
-
-function closeCityPicker(input) {
+/** Hard-close one city picker (including full-height portaled mobile drawer). */
+function forceCloseCityPicker(input) {
   if (!input) return;
   try {
-    const inst = typeof bootstrap !== 'undefined'
-      ? (bootstrap.Dropdown.getInstance(input) || bootstrap.Dropdown.getOrCreateInstance(input, {
-        autoClose: 'outside',
-        offset: [0, 8]
-      }))
-      : null;
+    const inst = typeof bootstrap !== 'undefined' ? bootstrap.Dropdown.getInstance(input) : null;
     if (inst) inst.hide();
   } catch { /* already closed */ }
   try {
@@ -239,9 +210,53 @@ function closeCityPicker(input) {
   }
 }
 
+/** Close every city drawer — used after a city is chosen so the sheet never sticks. */
+function forceCloseAllCityPickers() {
+  forceCloseCityPicker(document.getElementById('origin_input'));
+  forceCloseCityPicker(document.getElementById('destination_input'));
+  document
+    .querySelectorAll(
+      'body > .dropdown-menu.origin_location, body > .dropdown-menu.destination_location, ' +
+      '.dropdown-menu.origin_location.show, .dropdown-menu.destination_location.show'
+    )
+    .forEach(forceHideCityPickerMenu);
+  document.body.classList.remove('city-picker-open');
+  // Avoid a stale history entry re-triggering hide on the next Back
+  cityPickerPushed = false;
+}
+
+function closeAllDesktopCityPickers() {
+  forceCloseAllCityPickers();
+}
+
+function openDesktopCityPicker(input) {
+  if (!input || isMobileCityPicker()) return;
+
+  const menu = input.parentElement && input.parentElement.querySelector('.dropdown-menu');
+  if (menu && menu.classList.contains('show')) return;
+
+  const otherInput = input.id === 'origin_input'
+    ? document.getElementById('destination_input')
+    : document.getElementById('origin_input');
+  if (otherInput) forceCloseCityPicker(otherInput);
+
+  try {
+    cityPickerDropdown(input).show();
+  } catch { /* Bootstrap initializes on first interaction */ }
+}
+
+function closeCityPicker(input) {
+  forceCloseCityPicker(input);
+}
+
 function openCityPicker(input, force) {
   if (!input) return;
   if (isMobileCityPicker()) {
+    // Never stack full-height drawers — close the other one first
+    const otherInput = input.id === 'origin_input'
+      ? document.getElementById('destination_input')
+      : document.getElementById('origin_input');
+    if (otherInput) forceCloseCityPicker(otherInput);
     try {
       cityPickerDropdown(input).show();
     } catch {
@@ -256,7 +271,7 @@ function openCityPicker(input, force) {
   const otherInput = input.id === 'origin_input'
     ? document.getElementById('destination_input')
     : document.getElementById('origin_input');
-  if (otherInput) closeCityPicker(otherInput);
+  if (otherInput) forceCloseCityPicker(otherInput);
   try {
     cityPickerDropdown(input).show();
   } catch { /* Bootstrap initializes on first interaction */ }
@@ -1348,11 +1363,90 @@ function AddResultLocations_destination(result_locations, query) {
   });
 }
 
-function focusDestinationPicker() {
+function focusDestinationPicker(handoff) {
   const destInput = document.getElementById('destination_input');
   if (!destInput || !destinationUnlocked) return;
+  setSearchFlowStep('destination');
+  if (handoff) {
+    const picker = cityPickerContext(destInput)?.menu?.querySelector('.city-picker');
+    if (picker) {
+      const clearHandoff = function () {
+        picker.classList.remove('city-picker--handoff');
+      };
+      picker.classList.add('city-picker--handoff');
+      destInput.addEventListener('hidden.bs.dropdown', clearHandoff, { once: true });
+    }
+  }
   destInput.focus();
   openCityPicker(destInput, true);
+}
+
+function handoffToDestinationPicker(originInput) {
+  const originPicker = cityPickerContext(originInput)?.menu?.querySelector('.city-picker');
+  const continueToDestination = function () {
+    forceCloseAllCityPickers();
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        forceCloseAllCityPickers();
+        focusDestinationPicker(true);
+      });
+    });
+  };
+
+  if (!originPicker || typeof originPicker.animate !== 'function'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    continueToDestination();
+    return;
+  }
+
+  const exitAnimation = originPicker.animate(
+    [
+      { opacity: 1, transform: 'translateX(0)' },
+      { opacity: 0.55, transform: 'translateX(-1.25rem)' }
+    ],
+    {
+      duration: 160,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      fill: 'forwards'
+    }
+  );
+  exitAnimation.finished.then(continueToDestination, continueToDestination);
+}
+
+/**
+ * Run `next` after a Bootstrap city picker has finished closing (or immediately).
+ * Avoids the next overlay fighting the closing dropdown.
+ */
+function afterCityPickerClosed(input, next) {
+  if (typeof next !== 'function') return;
+  if (!input) {
+    next();
+    return;
+  }
+  const hostId = input.id || '';
+  const menu = (input.parentElement && input.parentElement.querySelector('.dropdown-menu'))
+    || (hostId && document.querySelector('body > .dropdown-menu[data-city-picker-host="' + hostId + '"]'));
+  const wasOpen = !!(menu && menu.classList.contains('show'));
+  if (!wasOpen) {
+    window.setTimeout(next, isMobileCityPicker() ? 60 : 0);
+    return;
+  }
+
+  let done = false;
+  let fallbackTimer = null;
+  const finish = function () {
+    if (done) return;
+    done = true;
+    input.removeEventListener('hidden.bs.dropdown', onHidden);
+    window.clearTimeout(fallbackTimer);
+    next();
+  };
+  const onHidden = function () { finish(); };
+  input.addEventListener('hidden.bs.dropdown', onHidden);
+  closeCityPicker(input);
+  if (!done) {
+    fallbackTimer = window.setTimeout(finish, isMobileCityPicker() ? 180 : 90);
+  }
 }
 
 function OriginSelected(id, name) {
@@ -1365,36 +1459,142 @@ function OriginSelected(id, name) {
   activeOriginKey = normalize(city);
   EnableDestination();
   SetDestinations(city);
+  setSearchFlowStep('destination');
+
+  // Warm the datepicker so opening after destination feels instant
+  try {
+    if (typeof ensureJalaliDatepicker === 'function') ensureJalaliDatepicker();
+    else {
+      var dateInput = document.getElementById('starttime');
+      if (dateInput && !dateInput._jalaliDatepicker && window.JalaliDatepicker) {
+        dateInput._jalaliDatepicker = new JalaliDatepicker(dateInput, {
+          minDate: 'today',
+          confirmOnDayTap: true
+        });
+        wireTripDatepickerOnSelect(dateInput._jalaliDatepicker);
+      }
+    }
+  } catch (err) { /* ignore */ }
 
   const originInput = document.getElementById('origin_input');
-  const originMenu = originInput && originInput.parentElement && originInput.parentElement.querySelector('.dropdown-menu');
-  const originWasOpen = !!(originMenu && originMenu.classList.contains('show'));
-
-  if (originWasOpen && originInput) {
-    const onOriginHidden = function () {
-      originInput.removeEventListener('hidden.bs.dropdown', onOriginHidden);
-      focusDestinationPicker();
-    };
-    originInput.addEventListener('hidden.bs.dropdown', onOriginHidden);
-    closeCityPicker(originInput);
-    window.setTimeout(function () {
-      originInput.removeEventListener('hidden.bs.dropdown', onOriginHidden);
-      if (!originMenu.classList.contains('show')) focusDestinationPicker();
-    }, isMobileCityPicker() ? 120 : 60);
+  if (isMobileCityPicker()) {
+    handoffToDestinationPicker(originInput);
     return;
   }
+  afterCityPickerClosed(originInput, focusDestinationPicker);
+}
 
-  window.setTimeout(focusDestinationPicker, isMobileCityPicker() ? 80 : 0);
+function setSearchFlowStep(step) {
+  const form = document.getElementById('tripForm');
+  if (!form) return;
+  if (step) form.setAttribute('data-search-step', step);
+  else form.removeAttribute('data-search-step');
 }
 
 function focusNextSearchField() {
-  if (isMobileCityPicker()) return;
   const dateInput = document.getElementById('starttime');
   if (!dateInput || dateInput.disabled) return;
+
+  const existingDate = (dateInput.value || '').trim();
+  // Destination changed but date already chosen → search immediately
+  if (existingDate) {
+    setSearchFlowStep(null);
+    // City sheet must be gone before navigation/search
+    if (isMobileCityPicker()) forceCloseAllCityPickers();
+    autoSearchAfterTripDateSelect();
+    return;
+  }
+
+  setSearchFlowStep('date');
   window.setTimeout(function () {
-    dateInput.focus();
-  }, 0);
+    // Re-assert close so a mid-transition portaled drawer cannot cover the calendar
+    if (isMobileCityPicker()) forceCloseAllCityPickers();
+    openTripDatePicker(dateInput);
+  }, isMobileCityPicker() ? 100 : 30);
 }
+
+function wireTripDatepickerOnSelect(picker) {
+  if (!picker) return;
+  picker.onSelect = function () {
+    setSearchFlowStep(null);
+    autoSearchAfterTripDateSelect();
+  };
+}
+
+function openTripDatePicker(dateInput) {
+  if (!dateInput) return;
+  var picker = dateInput._jalaliDatepicker;
+  if (!picker && window.JalaliDatepicker) {
+    picker = new JalaliDatepicker(dateInput, {
+      minDate: 'today',
+      confirmOnDayTap: true,
+      onSelect: function () {
+        setSearchFlowStep(null);
+        autoSearchAfterTripDateSelect();
+      }
+    });
+    dateInput._jalaliDatepicker = picker;
+  } else {
+    wireTripDatepickerOnSelect(picker);
+  }
+  if (picker && typeof picker.open === 'function') {
+    picker.open();
+    return;
+  }
+  try { dateInput.focus(); } catch (err) { /* ignore */ }
+}
+
+var _autoSearchPending = false;
+
+/**
+ * After origin + destination + date are filled, run search without an extra
+ * tap on «بزن بریم». Home navigates via GET; trips page uses AJAX submit.
+ */
+function autoSearchAfterTripDateSelect() {
+  var form = document.getElementById('tripForm');
+  if (!form || _autoSearchPending) return;
+
+  var origin = ($('#origin_input').val() || '').trim();
+  var dest = ($('#destination_input').val() || '').trim();
+  var date = ($('#starttime').val() || '').trim();
+  if (!origin || !dest || !date) return;
+
+  _autoSearchPending = true;
+  setSearchFlowStep(null);
+  setSearchSubmitLoading(true);
+
+  // Let the calendar close paint before navigation/AJAX.
+  window.setTimeout(function () {
+    try {
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        $(form).trigger('submit');
+      }
+    } finally {
+      // Home page navigates away; trips page stays — clear loading after a beat.
+      window.setTimeout(function () {
+        _autoSearchPending = false;
+        if (!$('.trips-container').length) setSearchSubmitLoading(false);
+      }, 600);
+    }
+  }, 60);
+}
+
+function setSearchSubmitLoading(on) {
+  var btn = document.querySelector('#tripForm .search-submit-btn, #tripForm .searchbar-submit');
+  if (!btn) return;
+  btn.classList.toggle('is-searching', !!on);
+  btn.setAttribute('aria-busy', on ? 'true' : 'false');
+  if (on) {
+    btn.dataset.prevLabel = btn.childNodes[0] && btn.childNodes[0].nodeType === 3
+      ? btn.childNodes[0].textContent
+      : '';
+  }
+}
+
+// Expose for IndexPage.js datepicker wiring
+window.autoSearchAfterTripDateSelect = autoSearchAfterTripDateSelect;
 
 function DestSelected(id, name) {
   const city = (name || '').trim();
@@ -1402,8 +1602,20 @@ function DestSelected(id, name) {
   $('#dest_picker_q').val(city);
 
   const destInput = document.getElementById('destination_input');
-  closeCityPicker(destInput);
-  focusNextSearchField();
+  if (isMobileCityPicker()) {
+    // Full-height destination sheet must close as soon as a city is tapped,
+    // then hand off to date (or auto-search if date already set).
+    forceCloseAllCityPickers();
+    // Double-rAF: wait for Bootstrap hide + portal detach to paint before date
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        forceCloseAllCityPickers();
+        focusNextSearchField();
+      });
+    });
+    return;
+  }
+  afterCityPickerClosed(destInput, focusNextSearchField);
 }
 
 /**
@@ -1811,8 +2023,14 @@ $(document).ready(async function () {
         <label class="fw-bold fs-5 ms-3">در حال بارگزاری سفر ها</label>
       </div>`);
     }
-    await loadCatalog;
-    await FetchTrips();
+    try {
+      await loadCatalog;
+      await FetchTrips();
+    } finally {
+      _autoSearchPending = false;
+      setSearchSubmitLoading(false);
+      setSearchFlowStep(null);
+    }
     return false;
   });
 });

@@ -963,7 +963,6 @@
                             else if (trip.afterdiscticketprice != trip.originalTicketprice && trip.originalTicketprice > 0)
                             {
                                 <h5>قیمت بعد از تخفیف</h5>
-                                <small class="text-muted d-block mt-1">قیمت قبل از تخفیف: @trip.originalTicketprice.ToString("N0") تومان</small>
                             }
                             else
                             {
@@ -986,7 +985,6 @@
                                     <bdi>
                                         <s><svg class="toman" aria-hidden="true"><use xlink:href="#toman"></use></svg>@trip.originalTicketprice.ToString("N0")</s>
                                     </bdi>
-                                    <small class="ms-1" style="font-size:0.7rem;">قبل از تخفیف</small>
                                 </h5>
                             }
                             <h4 class="price-final text-end">

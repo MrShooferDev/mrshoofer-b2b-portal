@@ -22,6 +22,7 @@
     || path.EndsWith("/home")
     || path.EndsWith("/home/index");
 
+  var isTripSearch = path.Contains("/taxitrips");
   var isTickets = path.Contains("/ticketinfo");
   var isAgencyProfile = path.Contains("/agencyarea/agency") && !path.Contains("legalprofile");
   var isLegalProfile = path.Contains("legalprofile");
@@ -32,8 +33,8 @@
   var isSupport = isHome && section == "support";
   var isSettingsSection = isAgencyProfile && section == "settings";
 
-  var isIntercity = isHome && !isSupport && (tripFocus == "intercity" || string.IsNullOrEmpty(tripFocus));
-  var isAirport = isHome && !isSupport && tripFocus == "airport";
+  var isIntercity = (isHome || isTripSearch) && !isSupport && (tripFocus == "intercity" || string.IsNullOrEmpty(tripFocus));
+  var isAirport = (isHome || isTripSearch) && !isSupport && tripFocus == "airport";
   var isNewTripBranch = isIntercity || isAirport;
 
   Agency? menuAgency = null;
@@ -346,10 +347,11 @@
       </span>
     </a>
 
-    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto" aria-label="بستن منو">
-      <iconify-icon class="fc-icon menu-toggle-icon d-none d-xl-block" icon="fluent-color:options-24" width="20" height="20" aria-hidden="true"></iconify-icon>
-      <iconify-icon class="front-side-menu-close-icon d-block d-xl-none" icon="fluent:dismiss-24" width="23" height="23" aria-hidden="true"></iconify-icon>
-    </a>
+    <button type="button" class="layout-menu-toggle menu-link text-large ms-auto" aria-label="بستن منو">
+      <svg class="front-side-menu-close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </svg>
+    </button>
   </div>
 
   <div class="menu-inner-shadow"></div>
@@ -375,7 +377,7 @@
           <a asp-area="AgencyArea" asp-controller="Home" asp-action="Index" asp-route-tripFocus="airport" class="menu-link">
             <iconify-icon class="fc-icon menu-icon menu-icon-3d" icon="fluent-color:globe-24" width="22" height="22" aria-hidden="true"></iconify-icon>
             <div>ترانسفر فرودگاهی</div>
-            <span class="badge rounded-pill ms-auto menu-badge-new" aria-hidden="true">جدید</span>
+            <span class="badge rounded-pill menu-badge-new" aria-hidden="true">جدید</span>
           </a>
         </li>
       </ul>

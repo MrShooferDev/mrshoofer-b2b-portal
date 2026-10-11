@@ -17,31 +17,22 @@
             DateTime today = DateTime.Now;
         }
 
-        <div class="tripday mt-1
-             @if (today.Date == selected_date.Date)
-             {
-                    @:badge bg-label-secondary rounded-pill
-             }">
+        <div class="tripday @(today.Date == selected_date.Date ? "tripday--selected" : "")">
             @{
                 PersianDate today_pdate = new PersianDate(today);
                 string today_date_string = today_pdate.Year + "-" + today_pdate.Month + "-" + today_pdate.Day;
                 string today_searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={today_date_string}";
             }
 
-            <a href="@today_searchstring" class="text-body">
-            <p class="mb-1 daytext mt-1">
-                @today_pdate.DayOfWeek  @today_pdate.Month/@today_pdate.Day
+            <a href="@today_searchstring" class="text-body" aria-current="@(today.Date == selected_date.Date ? "date" : null)">
+            <p class="daytext">
+                <span class="tripday__weekday">@today_pdate.DayOfWeek</span>
+                <span class="tripday__date">@today_pdate.Month/@today_pdate.Day</span>
             </p>
 
             <div class="daypriceconainer">
-                <p class="dayprice mb-1">
-                    <img src="/available_route.png" width="35px" alt="" />
-                </p>
+                <span class="tripday__availability">موجود</span>
             </div>
-            @if (today.Date == selected_date.Date)
-            {
-                <span class="selected-dayspan"></span>
-            }
             </a>
         </div>
 
@@ -55,20 +46,17 @@
             }
 
 
-            <div class="tripday mt-1
-             @if (today.Date == selected_date.Date)
-             {
-                    @:badge bg-label-secondary rounded-pill
-             }">
+            <div class="tripday @(today.Date == selected_date.Date ? "tripday--selected" : "")">
 
                 @{
                     string date_string = today_pdate.Year + "-" + today_pdate.Month + "-" + today_pdate.Day;
                     string searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={date_string}";
                 }
-                <a href="@searchstring" class="text-body">
+                <a href="@searchstring" class="text-body" aria-current="@(today.Date == selected_date.Date ? "date" : null)">
 
-                <p class="mb-1 daytext mt-1">
-                    @today_pdate.DayOfWeek  @today_pdate.Month/@today_pdate.Day
+                <p class="daytext">
+                    <span class="tripday__weekday">@today_pdate.DayOfWeek</span>
+                    <span class="tripday__date">@today_pdate.Month/@today_pdate.Day</span>
                 </p>
 
                 <div class="daypriceconainer">
@@ -82,13 +70,9 @@
                     </symbol>
                     </use>
                     </svg> *@
-                        <img src="/available_route.png" width="35px"/>
+                        <span class="tripday__availability">موجود</span>
                     </p>
                 </div>
-                @if (today.Date == selected_date.Date)
-                {
-                    <span class="selected-dayspan"></span>
-                }
 
               </a>
             </div>
@@ -101,4 +85,3 @@
     </button>
 
 </div>
-

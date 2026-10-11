@@ -1441,6 +1441,41 @@ html[dir="rtl"] .landing-hero .hero-seg-badge {
   border-radius: 1.2rem;
 }
 
+/* Guided search flow: softly pulse the next field to fill */
+#tripForm[data-search-step="destination"] #destination_input,
+#tripForm[data-search-step="date"] #starttime {
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--bs-primary, #000) 28%, transparent);
+  transition: box-shadow 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+#tripForm .search-submit-btn.is-searching,
+#tripForm .searchbar-submit.is-searching {
+  pointer-events: none;
+  opacity: 0.85;
+  position: relative;
+}
+
+#tripForm .search-submit-btn.is-searching .ti-search,
+#tripForm .searchbar-submit.is-searching .ti-search {
+  animation: trip-search-spin 0.7s linear infinite;
+}
+
+@keyframes trip-search-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #tripForm[data-search-step="destination"] #destination_input,
+  #tripForm[data-search-step="date"] #starttime {
+    transition: none;
+  }
+
+  #tripForm .search-submit-btn.is-searching .ti-search,
+  #tripForm .searchbar-submit.is-searching .ti-search {
+    animation: none;
+  }
+}
+
 /* Mobile: taller inputs (+~5%) + CTA button matches input size */
 @media (max-width: 767.98px) {
   .landing-hero {

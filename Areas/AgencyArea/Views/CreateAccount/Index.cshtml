@@ -1,0 +1,88 @@
+@{
+  Layout = null;
+  var initialTab = Context.Request.Query["tab"].ToString() == "emails" ? "emails" : "chats";
+  var initialQuantity = int.TryParse(Context.Request.Query["quantity"], out var quantity) ? quantity : 5;
+  var initialStep = int.TryParse(Context.Request.Query["step"], out var step) ? step : 1;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="light" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ساخت حساب کاربری</title>
+  <link rel="stylesheet" href="~/fonts/farsi-fonts/font.css" />
+  <link rel="stylesheet" href="~/css/create-account-card.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/js/react/heroui.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/js/react/create-account.css" asp-append-version="true" />
+</head>
+<body class="ca-page bg-background text-foreground">
+  <div class="ca-card">
+    <div class="ca-header">
+      <span class="ca-avatar">
+        <span class="ca-avatar__inner">
+          <svg class="ca-avatar__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M8 8.5c3.85 0 7 2.5 7 4.5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2c0-2 3.15-4.5 7-4.5M8 10c-1.61 0-3.064.526-4.092 1.234C2.798 12.001 2.5 12.733 2.5 13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5c0-.267-.297-1-1.408-1.766C11.064 10.526 9.609 10 8 10m0-9a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7m0 1.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4"></path>
+          </svg>
+        </span>
+      </span>
+
+      <h3 class="ca-title">ساخت حساب کاربری</h3>
+
+      <button type="button" class="ca-close" tabindex="0" aria-label="بستن">
+        <svg class="ca-close__icon" aria-hidden="true" fill="none" height="16" role="presentation" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg" data-slot="close-button-icon">
+          <path clip-rule="evenodd" d="M3.47 3.47a.75.75 0 0 1 1.06 0L8 6.94l3.47-3.47a.75.75 0 1 1 1.06 1.06L9.06 8l3.47 3.47a.75.75 0 1 1-1.06 1.06L8 9.06l-3.47 3.47a.75.75 0 0 1-1.06-1.06L6.94 8 3.47 4.53a.75.75 0 0 1 0-1.06Z" fill="currentColor" fill-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="ca-body">
+      <p class="ca-lead">۷ روز استفادهٔ رایگان را همین حالا شروع کنید. نیازی به کارت بانکی نیست.</p>
+
+      <button type="button" class="ca-btn ca-btn--primary" tabindex="0">
+        <span>شروع کنید</span>
+      </button>
+
+      <div class="ca-divider">
+        <hr class="ca-divider__line" role="separator" />
+        <p class="ca-divider__text">یا</p>
+        <hr class="ca-divider__line" role="separator" />
+      </div>
+
+      <button type="button" class="ca-btn ca-btn--secondary" tabindex="0">
+        <svg class="ca-btn__brand" aria-hidden="true" fill="none" focusable="false" height="1em" role="presentation" viewBox="0 0 256 262" width="1em" xmlns="http://www.w3.org/2000/svg">
+          <path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622l38.755 30.023l2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285f4"></path>
+          <path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055c-34.523 0-63.824-22.773-74.269-54.25l-1.531.13l-40.298 31.187l-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34a853"></path>
+          <path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82c0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602z" fill="#fbbc05"></path>
+          <path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#eb4335"></path>
+        </svg>
+        <span>ادامه با گوگل</span>
+      </button>
+
+      <button type="button" class="ca-btn ca-btn--secondary" tabindex="0">
+        <svg class="ca-btn__brand" aria-hidden="true" fill="currentColor" focusable="false" height="1em" role="presentation" viewBox="0 0 256 315" width="1em" xmlns="http://www.w3.org/2000/svg">
+          <path d="M213.803 167.03c.442 47.58 41.74 63.413 42.197 63.615c-.35 1.116-6.599 22.563-21.757 44.716c-13.104 19.153-26.705 38.235-48.13 38.63c-21.05.388-27.82-12.483-51.888-12.483c-24.061 0-31.582 12.088-51.51 12.871c-20.68.783-36.428-20.71-49.64-39.793c-27-39.033-47.633-110.3-19.928-158.406c13.763-23.89 38.36-39.017 65.056-39.405c20.307-.387 39.475 13.662 51.889 13.662c12.406 0 35.699-16.895 60.186-14.414c10.25.427 39.026 4.14 57.503 31.186c-1.49.923-34.335 20.044-33.978 59.822M174.24 50.199c10.98-13.29 18.369-31.79 16.353-50.199c-15.826.636-34.962 10.546-46.314 23.828c-10.173 11.763-19.082 30.589-16.678 48.633c17.64 1.365 35.66-8.964 46.64-22.262"></path>
+        </svg>
+        <span>ادامه با اپل</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ca-tabs-mount" data-ca-tabs data-default-value="@initialTab" data-aria-label="گزینه‌ها"></div>
+
+  <div class="ca-stepper-mount" data-ca-stepper data-default-value="@initialQuantity" data-values="5,15,30,60,120" data-label="تعداد"></div>
+
+  <div class="ca-listbox-mount" data-ca-listbox data-default-focused-key="edit-file" data-aria-label="عملیات فایل"></div>
+
+  <div class="ca-cta-mount" data-ca-cta data-primary-href="#" data-secondary-href="#"></div>
+
+  <div class="ca-segment-mount" data-ca-segment data-default-value="meetings" data-aria-label="بخش‌ها"></div>
+
+  <div class="ca-autocomplete-mount" data-ca-autocomplete data-default-value="" data-label="استان‌های مقصد" data-placeholder="انتخاب استان‌ها"></div>
+
+  <div class="ca-drawer-mount" data-ca-drawer data-placements="bottom,top,left,right"></div>
+
+  <div class="ca-onboarding-mount" data-ca-onboarding data-default-step="@initialStep" data-brand-name="شوفر" data-workspace-host="app.shoofer.ir"></div>
+
+  <script src="~/js/react/create-account.js" asp-append-version="true"></script>
+</body>
+</html>

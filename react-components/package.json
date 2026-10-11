@@ -1,0 +1,28 @@
+{
+  "name": "mrshoofer-react-app",
+  "private": true,
+  "scripts": {
+    "build:css": "./node_modules/.bin/tailwindcss -i ./heroui.css -o ../wwwroot/js/react/heroui.css --minify",
+    "build:js": "esbuild create-account.tsx --bundle --minify --format=iife --target=es2020 --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\" --outfile=../wwwroot/js/react/create-account.js",
+    "build": "npm run build:js && npm run build:css",
+    "watch:css": "./node_modules/.bin/tailwindcss -i ./heroui.css -o ../wwwroot/js/react/heroui.css --watch",
+    "watch": "esbuild create-account.tsx --bundle --sourcemap --format=iife --target=es2020 --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\" --outfile=../wwwroot/js/react/create-account.js --watch",
+    "build:ui": "npm --prefix ui run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
+    "@number-flow/react": "^0.6.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.24.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.6.3"
+  }
+}

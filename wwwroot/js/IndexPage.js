@@ -24,8 +24,28 @@ var HERO_SERVICE_META = {
 
 function ensureJalaliDatepicker() {
   var dateInput = document.getElementById('starttime');
-  if (!dateInput || dateInput._jalaliDatepicker || !window.JalaliDatepicker) return;
-  dateInput._jalaliDatepicker = new JalaliDatepicker(dateInput, { minDate: 'today' });
+  if (!dateInput || !window.JalaliDatepicker) return null;
+  if (!dateInput._jalaliDatepicker) {
+    dateInput._jalaliDatepicker = new JalaliDatepicker(dateInput, {
+      minDate: 'today',
+      confirmOnDayTap: true,
+      onSelect: function () {
+        if (typeof window.autoSearchAfterTripDateSelect === 'function') {
+          window.autoSearchAfterTripDateSelect();
+        }
+      }
+    });
+  } else {
+    if (!dateInput._jalaliDatepicker.onSelect) {
+      dateInput._jalaliDatepicker.onSelect = function () {
+        if (typeof window.autoSearchAfterTripDateSelect === 'function') {
+          window.autoSearchAfterTripDateSelect();
+        }
+      };
+    }
+    dateInput._jalaliDatepicker.confirmOnDayTap = true;
+  }
+  return dateInput._jalaliDatepicker;
 }
 
 function setHeroStageArt(service) {
@@ -183,6 +203,10 @@ $(function () {
   $(document).on('click', '.starttimeselector, .ti-calendar-stats', function () {
     ensureJalaliDatepicker();
     var dateInput = document.getElementById('starttime');
+    if (dateInput && dateInput._jalaliDatepicker && typeof dateInput._jalaliDatepicker.open === 'function') {
+      dateInput._jalaliDatepicker.open();
+      return;
+    }
     if (dateInput) dateInput.focus();
   });
 });
