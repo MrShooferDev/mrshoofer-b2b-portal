@@ -5,6 +5,7 @@
 @{
 	var loginUrl = Url.Action("Login", "Auth", new { area = "AgencyArea" });
 	var otpUrl = Url.Action("Loginotp", "Auth", new { area = "AgencyArea" });
+	var otpSubmitUrl = Url.Action("LoginotpSubmit", "Auth", new { area = "AgencyArea" });
 	var protectedPaths = string.Join(",", new[]
 	{
 		Url.Action("Index", "TicketInfo", new { area = "AgencyArea" }),
@@ -17,6 +18,7 @@
 <div class="login-sheet" id="loginSheet" hidden
 	 data-login-url="@loginUrl"
 	 data-otp-url="@otpUrl"
+	 data-otp-submit-url="@otpSubmitUrl"
 	 data-protected-paths="@protectedPaths">
 	<div class="login-sheet__backdrop" data-login-sheet-close></div>
 	<section class="login-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="loginSheetTitle" tabindex="-1">
@@ -31,43 +33,106 @@
 			<p class="login-sheet__subtitle" data-login-sheet-message>برای ورود، اطلاعات کاربر را وارد کنید</p>
 		</div>
 
-		<form class="login-sheet__form" method="post" action="@loginUrl" novalidate>
-			@Html.AntiForgeryToken()
-			<input type="hidden" name="ReturnUrl" value="" />
+		<div class="login-sheet__error text-danger" role="alert" hidden data-login-sheet-error></div>
 
-			<div class="login-sheet__error text-danger" role="alert" hidden data-login-sheet-error></div>
+		<div data-login-sheet-view="password">
+			<form class="login-sheet__form" method="post" action="@loginUrl" novalidate>
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="ReturnUrl" value="" />
 
-			<div class="mb-3">
-				<label class="form-label" for="loginSheetUsername">نام کاربری</label>
-				<input class="form-control" id="loginSheetUsername" name="Username" type="text" autocomplete="username" placeholder="نام کاربری را وارد کنید" required />
-			</div>
-
-			<div class="mb-3">
-				<div class="d-flex justify-content-between">
-					<label class="form-label" for="loginSheetPassword">رمز عبور</label>
-					<a href="/Auth/ForgotPasswordBasic"><small>فراموش کرده‌اید؟</small></a>
+				<div class="mb-3">
+					<label class="form-label" for="loginSheetUsername">نام کاربری</label>
+					<input class="form-control" id="loginSheetUsername" name="Username" type="text" autocomplete="username" placeholder="نام کاربری را وارد کنید" required />
 				</div>
-				<div class="input-group input-group-merge">
-					<input class="form-control" id="loginSheetPassword" name="Password" type="password" autocomplete="current-password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" required />
-					<button type="button" class="input-group-text cursor-pointer" data-login-sheet-toggle-password aria-label="نمایش رمز عبور">
-						<i class="ti ti-eye-off" aria-hidden="true"></i>
-					</button>
-				</div>
-			</div>
 
-			<div class="mb-3 d-flex justify-content-between align-items-center">
-				<div class="form-check mb-0">
-					<input class="form-check-input" type="checkbox" id="loginSheetRemember" name="RemmemberMe" value="true" />
-					<input type="hidden" name="RemmemberMe" value="false" />
-					<label class="form-check-label" for="loginSheetRemember">مرا به خاطر بسپار</label>
+				<div class="mb-3">
+					<div class="d-flex justify-content-between">
+						<label class="form-label" for="loginSheetPassword">رمز عبور</label>
+						<a href="/Auth/ForgotPasswordBasic"><small>فراموش کرده‌اید؟</small></a>
+					</div>
+					<div class="input-group input-group-merge">
+						<input class="form-control" id="loginSheetPassword" name="Password" type="password" autocomplete="current-password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" required />
+						<button type="button" class="input-group-text cursor-pointer" data-login-sheet-toggle-password aria-label="نمایش رمز عبور">
+							<i class="ti ti-eye-off" aria-hidden="true"></i>
+						</button>
+					</div>
 				</div>
-				<a href="@otpUrl" data-login-sheet-otp><small>ورود با رمز یکبارمصرف</small></a>
-			</div>
 
-			<button class="btn btn-primary w-100 login-sheet__submit" type="submit">
-				<span class="login-sheet__submit-label">ورود به سیستم</span>
-				<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
-			</button>
-		</form>
+				<div class="mb-3 d-flex justify-content-between align-items-center">
+					<div class="form-check mb-0">
+						<input class="form-check-input" type="checkbox" id="loginSheetRemember" name="RemmemberMe" value="true" />
+						<input type="hidden" name="RemmemberMe" value="false" />
+						<label class="form-check-label" for="loginSheetRemember">مرا به خاطر بسپار</label>
+					</div>
+					<button type="button" class="btn btn-link p-0 align-baseline" data-login-sheet-show-otp><small>ورود با رمز یکبارمصرف</small></button>
+				</div>
+
+				<button class="btn btn-primary w-100 login-sheet__submit" type="submit">
+					<span class="login-sheet__submit-label">ورود به سیستم</span>
+					<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+				</button>
+			</form>
+		</div>
+
+		<div data-login-sheet-view="otp-phone" hidden>
+			<form class="login-sheet__form" method="post" action="@otpUrl" novalidate>
+				<input type="hidden" name="ReturnUrl" value="" />
+
+				<div class="mb-3">
+					<label class="form-label" for="loginSheetOtpPhone">شماره تلفن</label>
+					<input class="form-control" id="loginSheetOtpPhone" name="numberphone" type="tel" autocomplete="tel" placeholder="شماره تلفن خود را وارد کنید" />
+				</div>
+
+				<div class="mb-3 d-flex justify-content-between align-items-center">
+					<button type="button" class="btn btn-link p-0 align-baseline" data-login-sheet-show-password><small>ورود با نام کاربری و رمز</small></button>
+				</div>
+
+				<button class="btn btn-primary w-100 login-sheet__submit" type="submit">
+					<span class="login-sheet__submit-label">ارسال کد</span>
+					<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+				</button>
+			</form>
+		</div>
+
+		<div data-login-sheet-view="otp-code" hidden>
+			<p class="login-sheet__otp-hint mb-2">
+				ما یک کد تأیید به تلفن همراه شما ارسال کردیم. کد تایید ارسال شده را در فیلد زیر تایپ کنید.
+				<span class="fw-medium d-block mt-2">
+					<bdi data-login-sheet-otp-display></bdi>
+					<button type="button" class="btn btn-link p-0 align-baseline" data-login-sheet-change-phone>تغییر شماره</button>
+				</span>
+			</p>
+			<p class="mb-2 fw-medium">کد امنیتی 5 رقمی</p>
+
+			<form class="login-sheet__form" method="post" action="@otpSubmitUrl" novalidate>
+				<input type="hidden" name="ReturnUrl" value="" />
+				<input type="hidden" name="numberphone" value="" data-login-sheet-otp-phone-hidden />
+
+				<div class="mb-3">
+					<div class="login-sheet__otp-inputs ltr" dir="ltr">
+						<input autocomplete="one-time-code" name="code1" type="tel" class="form-control text-center" maxlength="1" inputmode="numeric" aria-label="رقم ۱" />
+						<input autocomplete="off" name="code2" type="tel" class="form-control text-center" maxlength="1" inputmode="numeric" aria-label="رقم ۲" />
+						<input autocomplete="off" name="code3" type="tel" class="form-control text-center" maxlength="1" inputmode="numeric" aria-label="رقم ۳" />
+						<input autocomplete="off" name="code4" type="tel" class="form-control text-center" maxlength="1" inputmode="numeric" aria-label="رقم ۴" />
+						<input autocomplete="off" name="code5" type="tel" class="form-control text-center" maxlength="1" inputmode="numeric" aria-label="رقم ۵" />
+					</div>
+				</div>
+
+				<button class="btn btn-primary w-100 login-sheet__submit mb-3" type="submit">
+					<span class="login-sheet__submit-label">ورود</span>
+					<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+				</button>
+
+				<div class="text-center mb-3">
+					<span data-login-sheet-otp-countdown class="me-1"></span>
+					کد را دریافت نکردید؟
+					<button type="button" class="btn btn-link p-0 align-baseline" data-login-sheet-resend-otp disabled>ارسال مجدد</button>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-link p-0 align-baseline" data-login-sheet-show-password><small>ورود با نام کاربری و رمز</small></button>
+				</div>
+			</form>
+		</div>
 	</section>
 </div>

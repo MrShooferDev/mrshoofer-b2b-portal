@@ -1469,7 +1469,7 @@ function OriginSelected(id, name) {
       if (dateInput && !dateInput._jalaliDatepicker && window.JalaliDatepicker) {
         dateInput._jalaliDatepicker = new JalaliDatepicker(dateInput, {
           minDate: 'today',
-          confirmOnDayTap: true
+          confirmOnDayTap: false
         });
         wireTripDatepickerOnSelect(dateInput._jalaliDatepicker);
       }
@@ -1515,6 +1515,7 @@ function focusNextSearchField() {
 
 function wireTripDatepickerOnSelect(picker) {
   if (!picker) return;
+  picker.confirmOnDayTap = false;
   picker.onSelect = function () {
     setSearchFlowStep(null);
     autoSearchAfterTripDateSelect();
@@ -1527,7 +1528,7 @@ function openTripDatePicker(dateInput) {
   if (!picker && window.JalaliDatepicker) {
     picker = new JalaliDatepicker(dateInput, {
       minDate: 'today',
-      confirmOnDayTap: true,
+      confirmOnDayTap: false,
       onSelect: function () {
         setSearchFlowStep(null);
         autoSearchAfterTripDateSelect();

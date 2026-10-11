@@ -28,7 +28,7 @@ function ensureJalaliDatepicker() {
   if (!dateInput._jalaliDatepicker) {
     dateInput._jalaliDatepicker = new JalaliDatepicker(dateInput, {
       minDate: 'today',
-      confirmOnDayTap: true,
+      confirmOnDayTap: false,
       onSelect: function () {
         if (typeof window.autoSearchAfterTripDateSelect === 'function') {
           window.autoSearchAfterTripDateSelect();
@@ -43,7 +43,7 @@ function ensureJalaliDatepicker() {
         }
       };
     }
-    dateInput._jalaliDatepicker.confirmOnDayTap = true;
+    dateInput._jalaliDatepicker.confirmOnDayTap = false;
   }
   return dateInput._jalaliDatepicker;
 }

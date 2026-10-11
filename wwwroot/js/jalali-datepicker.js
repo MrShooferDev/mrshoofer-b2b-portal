@@ -101,8 +101,8 @@
     this.onSelect = opts.onSelect || null;
     this.tooltipText = opts.tooltipText || '';
     this.selected = null;
-    // One tap on a day confirms (snappier trip search). Set false to require «تأیید».
-    this.confirmOnDayTap = opts.confirmOnDayTap !== false;
+    // Day tap only highlights; search/apply waits for «تأیید» unless confirmOnDayTap is true.
+    this.confirmOnDayTap = opts.confirmOnDayTap === true;
 
     var today = toJalali(new JD());
     if (opts.minDate === 'today') {
