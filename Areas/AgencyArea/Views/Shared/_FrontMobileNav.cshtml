@@ -1,0 +1,59 @@
+@{
+  var controller = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLowerInvariant();
+  var isSearch = controller is "taxitrips" or "home";
+  var isTickets = controller is "ticketinfo";
+  var isAccount = controller is "agency" or "auth";
+  var isReserve = controller is "reserve";
+}
+<nav class="trips-mobile-nav" aria-label="ناوبری اصلی موبایل">
+  <a class="trips-mobile-nav__item@(isSearch || isReserve ? " is-active" : null)"
+     asp-area="AgencyArea"
+     asp-controller="TaxiTrips"
+     asp-action="Index"
+     aria-current="@(isSearch || isReserve ? "page" : null)">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <span>جستجوی سفر</span>
+  </a>
+  <a class="trips-mobile-nav__item@(isTickets ? " is-active" : null)"
+     asp-area="AgencyArea"
+     asp-controller="TicketInfo"
+     asp-action="Index"
+     aria-current="@(isTickets ? "page" : null)">
+    <i class="ti ti-ticket" aria-hidden="true"></i>
+    <span>سفرهای من</span>
+  </a>
+  <a class="trips-mobile-nav__action"
+     asp-area="AgencyArea"
+     asp-controller="Home"
+     asp-action="Index"
+     asp-route-tripFocus="intercity"
+     aria-label="درخواست سفر جدید">
+    <i class="ti ti-plus" aria-hidden="true"></i>
+  </a>
+  <a class="trips-mobile-nav__item" href="tel:02128422243">
+    <i class="ti ti-message-circle" aria-hidden="true"></i>
+    <span>پشتیبانی</span>
+  </a>
+  @if (User.Identity?.IsAuthenticated == true)
+  {
+    <a class="trips-mobile-nav__item@(isAccount ? " is-active" : null)"
+       asp-area="AgencyArea"
+       asp-controller="Agency"
+       asp-action="Index"
+       aria-current="@(isAccount ? "page" : null)">
+      <i class="ti ti-user" aria-hidden="true"></i>
+      <span>حساب کاربری</span>
+    </a>
+  }
+  else
+  {
+    <a class="trips-mobile-nav__item@(isAccount ? " is-active" : null)"
+       asp-area="AgencyArea"
+       asp-controller="Auth"
+       asp-action="Login"
+       aria-current="@(isAccount ? "page" : null)">
+      <i class="ti ti-user" aria-hidden="true"></i>
+      <span>حساب کاربری</span>
+    </a>
+  }
+</nav>

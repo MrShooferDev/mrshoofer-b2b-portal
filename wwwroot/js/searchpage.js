@@ -7,7 +7,7 @@ let originKeys = []; // normalized city keys (after intersecting with supported)
 let supportedKeys = new Set(); // normalized keys supported by server (DirectionsRepository)
 let displayNameByKey = new Map(); // normalized -> display name (prefer Persian)
 let _destinations = []; // destination display names
-let trips = []; // will be reused by Trips.js
+window.trips = window.trips || []; // shared with Trips.js (sort / car filter read window.trips)
 let activeOriginKey = ''; // exact typed/clicked origin currently driving destination choices
 
 // Decode literal \uXXXX sequences into real characters (handles double-escaped payloads)
@@ -1127,8 +1127,8 @@ async function FetchTrips() {
   const { origin, destination, searchdate } = readSearchCities();
 
   if (!origin || !destination || !searchdate) {
-    trips = [];
-    if (typeof renderTrips === 'function') renderTrips(trips);
+    window.trips = [];
+    if (typeof renderTrips === 'function') renderTrips(window.trips);
     return;
   }
 
@@ -1142,6 +1142,7 @@ async function FetchTrips() {
   if (!isOriginValid || !isDirectionValid) {
     const $container = $('.trips-container');
     if ($container.length) {
+      $('.trips-page-shell').addClass('trips-no-results');
       $container.empty().append(`
         <div class="route-miss-page">
           <div class="route-miss-page__icon" aria-hidden="true"><i class="ti ti-route-off"></i></div>
@@ -1157,19 +1158,19 @@ async function FetchTrips() {
     } else {
       openRouteRequestModal({ origin: origin, dest: destination, focus: isOriginValid ? 'dest' : 'origin' });
     }
-    trips = [];
+    window.trips = [];
     return;
   }
 
   try {
     const url = `/TaxiTrips/SearchJson?originstring=${encodeURIComponent(origin)}&destinationstring=${encodeURIComponent(destination)}&searchdate=${encodeURIComponent(searchdate)}`;
     const data = await $.getJSON(url);
-    trips = data || [];
+    window.trips = data || [];
     if (typeof renderTrips === 'function') {
-      renderTrips(trips);
+      renderTrips(window.trips);
       if (typeof GetCarModels === 'function' && typeof GenerateCarModelsFilter === 'function') {
         $('#carmodelsfilter').find('.form-check').not(':first').remove();
-        const carModels = GetCarModels(trips);
+        const carModels = GetCarModels(window.trips);
         GenerateCarModelsFilter(carModels);
       }
     }
@@ -1189,7 +1190,7 @@ async function FetchTrips() {
         <label class="fs-5 fw-bold mt-4 pt-3 text-danger">${msg}</label>
       </div>`);
     } else { alert(msg); }
-    trips = [];
+    window.trips = [];
   }
 }
 

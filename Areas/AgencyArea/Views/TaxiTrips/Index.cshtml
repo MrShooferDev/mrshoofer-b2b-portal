@@ -368,15 +368,10 @@
 									@ViewBag.dest_city_text
 									</strong>
 								</label>
-								<label class="mt-1 ms-1">
+								<label class="mt-1 ms-1 trips-selected-date-label">
 									روز
-									
-										@(((Application.Services.PersianDate)ViewBag.searchpdate).DayOfWeek)
-
-
-										<span class="ms-1">
-										@(((Application.Services.PersianDate)ViewBag.searchpdate).ToShortDateString())
-										</span>
+									<span class="trips-selected-date-weekday">@(((Application.Services.PersianDate)ViewBag.searchpdate).DayOfWeek)</span>
+									<span class="ms-1 trips-selected-date-value">@(((Application.Services.PersianDate)ViewBag.searchpdate).ToShortDateString())</span>
 								</label>
 							</div>
 						</div>
@@ -447,20 +442,16 @@
 
                                 @await Html.PartialAsync("TimelinePartial", DateTime.Now)
 
-                                <div class="card d-md-none mt-2 mb-2 trips-mobile-filters">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                                            <span class="small text-muted ms-1">ترتیب:</span>
-                                            <div class="btn-group" role="group" aria-label="ترتیب نتایج">
-                                                <input type="radio" class="btn-check" name="mobile-order" id="mobileOrderSuggested" autocomplete="off" checked onclick="orderFilterSelected(0)">
-                                                <label class="btn btn-sm btn-outline-secondary" for="mobileOrderSuggested">پیشنهاد</label>
-                                                <input type="radio" class="btn-check" name="mobile-order" id="mobileOrderCheapest" autocomplete="off" onclick="orderFilterSelected(2)">
-                                                <label class="btn btn-sm btn-outline-secondary" for="mobileOrderCheapest">ارزان‌تر</label>
-                                                <input type="radio" class="btn-check" name="mobile-order" id="mobileOrderPriciest" autocomplete="off" onclick="orderFilterSelected(1)">
-                                                <label class="btn btn-sm btn-outline-secondary" for="mobileOrderPriciest">گران‌تر</label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="trips-mobile-filters d-md-none" role="group" aria-label="ترتیب نتایج">
+									<span class="trips-mobile-filters__label">ترتیب</span>
+									<div class="trips-mobile-filters__seg">
+										<input type="radio" class="btn-check" name="mobile-order" id="mobileOrderSuggested" autocomplete="off" checked onclick="orderFilterSelected(0)">
+										<label class="trips-mobile-filters__opt" for="mobileOrderSuggested">پیشنهاد</label>
+										<input type="radio" class="btn-check" name="mobile-order" id="mobileOrderCheapest" autocomplete="off" onclick="orderFilterSelected(2)">
+										<label class="trips-mobile-filters__opt" for="mobileOrderCheapest">ارزان‌تر</label>
+										<input type="radio" class="btn-check" name="mobile-order" id="mobileOrderPriciest" autocomplete="off" onclick="orderFilterSelected(1)">
+										<label class="trips-mobile-filters__opt" for="mobileOrderPriciest">گران‌تر</label>
+									</div>
                                 </div>
 
 							  
@@ -490,37 +481,5 @@
 				</div>
 	</div>
 </div>
-
-<nav class="trips-mobile-nav" aria-label="ناوبری اصلی موبایل">
-	<a class="trips-mobile-nav__item is-active" href="#tripForm" aria-current="page">
-		<i class="ti ti-search" aria-hidden="true"></i>
-		<span>جستجوی سفر</span>
-	</a>
-	<a class="trips-mobile-nav__item" asp-area="AgencyArea" asp-controller="TicketInfo" asp-action="Index">
-		<i class="ti ti-ticket" aria-hidden="true"></i>
-		<span>سفرهای من</span>
-	</a>
-	<a class="trips-mobile-nav__action" href="/?tripFocus=intercity" aria-label="درخواست سفر جدید">
-		<i class="ti ti-plus" aria-hidden="true"></i>
-	</a>
-	<a class="trips-mobile-nav__item" href="tel:02128422243">
-		<i class="ti ti-message-circle" aria-hidden="true"></i>
-		<span>پشتیبانی</span>
-	</a>
-	@if (User.Identity?.IsAuthenticated == true)
-	{
-		<a class="trips-mobile-nav__item" asp-area="AgencyArea" asp-controller="Agency" asp-action="Index">
-			<i class="ti ti-user" aria-hidden="true"></i>
-			<span>حساب کاربری</span>
-		</a>
-	}
-	else
-	{
-		<a class="trips-mobile-nav__item" asp-area="AgencyArea" asp-controller="Auth" asp-action="Login">
-			<i class="ti ti-user" aria-hidden="true"></i>
-			<span>حساب کاربری</span>
-		</a>
-	}
-</nav>
 
 </div><!-- /.trips-page-shell -->

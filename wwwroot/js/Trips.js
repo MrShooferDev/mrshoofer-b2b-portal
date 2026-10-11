@@ -195,18 +195,24 @@ function fetchTripsData() {
 }
 
 
-let nottripfoundHtml = `<div class="d-flex col-12 mt-3" style="flex-direction: column; align-items: center; justify-content: start;">
+let nottripfoundHtml = `<div class="route-miss-page trips-empty-state">
+  <div class="route-miss-page__icon" aria-hidden="true"><i class="ti ti-route-off"></i></div>
+  <p class="fs-5 fw-bold mb-0">سفری یافت نشد</p>
+  <p class="route-miss-empty">در بازه ای که شما جست و جو کردید، سفری یافت نشد</p>
+</div>`;
 
-							<label class="fs-4 fw-bold mt-4 pt-3">
-							  ســفری یافت نشـد
-							</label>
-							<small>
-							  در بازه ای که شما جست و جو کردید، سفری یافت نشد
-							</small>
-							</div>
-
-           <div class="trips-container">
-        </div>`;
+function renderNoTrips() {
+  $('.trips-page-shell').addClass('trips-no-results');
+  const $container = $('.trips-container');
+  $container.empty().append(nottripfoundHtml);
+  if (typeof appendNoRouteCta === 'function') {
+    appendNoRouteCta($container.find('.trips-empty-state'), {
+      origin: ($('#origin_input').val() || '').toString().trim(),
+      dest: ($('#destination_input').val() || '').toString().trim(),
+      focus: 'origin'
+    });
+  }
+}
 
 
 
@@ -274,6 +280,70 @@ function GenerateCarModelsFilter(carmodels) {
   });
 }
 
+function showTripsLoadingState() {
+  const $c = $('.trips-container');
+  if (!$c.length) return;
+  $('.trips-page-shell').removeClass('trips-no-results');
+  $c.empty().append(`<div class="trips-loading-state d-flex justify-content-center align-items-center mt-5 pt-3">
+    <div class="sk-chase sk-primary">
+      <div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div>
+      <div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div>
+    </div>
+    <label class="fw-bold fs-5 ms-3">در حال بارگذاری سفر ها</label>
+  </div>`);
+}
+
+function syncTripsUrlSearchDate(searchdate) {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('searchdate', searchdate);
+    const origin = ($('#origin_input').val() || '').toString().trim();
+    const dest = ($('#destination_input').val() || '').toString().trim();
+    if (origin) url.searchParams.set('originstring', origin);
+    if (dest) url.searchParams.set('destinationstring', dest);
+    history.pushState({ mrTripsDate: searchdate }, '', url.pathname + url.search + url.hash);
+  } catch { /* ignore */ }
+}
+
+function selectTimelineDay($link) {
+  const $day = $link.closest('.tripday');
+  $('#tripsTimelineRail .tripday').removeClass('tripday--selected');
+  $('#tripsTimelineRail .tripday__link').removeAttr('aria-current');
+  $day.addClass('tripday--selected');
+  $link.attr('aria-current', 'date');
+}
+
+function updateSelectedDateChrome(searchdate, weekday) {
+  const $weekday = $('.trips-selected-date-weekday');
+  const $value = $('.trips-selected-date-value');
+  if ($weekday.length && weekday) $weekday.text(weekday);
+  if ($value.length && searchdate) $value.text(searchdate);
+}
+
+async function loadTripsForSelectedDate(searchdate, weekday) {
+  $('#starttime').val(searchdate);
+  updateSelectedDateChrome(searchdate, weekday);
+  syncTripsUrlSearchDate(searchdate);
+  showTripsLoadingState();
+
+  if (typeof FetchTrips === 'function') {
+    await FetchTrips();
+    return;
+  }
+
+  try {
+    const result = await fetchTripsData();
+    window.trips = result || [];
+    if (window.trips.length === 0) renderNoTrips();
+    else {
+      renderTrips(window.trips);
+      GenerateCarModelsFilter(GetCarModels(window.trips));
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
 $(function () {
 
   // Delegate click handling for chips without moving them or re-rendering the container
@@ -287,14 +357,27 @@ $(function () {
     carFilterSelectes(model);
   });
 
+  // Timeline day → AJAX search (no full page reload)
+  $(document).on('click', '#tripsTimelineRail .tripday__link', function (e) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.which === 2) return;
+    e.preventDefault();
+    const $link = $(this);
+    const searchdate = ($link.attr('data-search-date') || '').trim();
+    if (!searchdate) return;
+    if ($link.closest('.tripday').hasClass('tripday--selected') && ($('#starttime').val() || '').trim() === searchdate) {
+      return;
+    }
+    selectTimelineDay($link);
+    loadTripsForSelectedDate(searchdate, ($link.attr('data-weekday') || '').trim());
+  });
+
   fetchTripsData()
     .then(function (result) {
       window.trips = result;
 
       // no trips
       if (window.trips.length == 0) {
-        $('.trips-container').empty();
-        $('.trips-container').append(nottripfoundHtml);
+        renderNoTrips();
       }
       else {
 
@@ -310,6 +393,11 @@ $(function () {
 });
 
 function renderTrips(input_trips) {
+  if (!input_trips || input_trips.length === 0) {
+    renderNoTrips();
+    return;
+  }
+  $('.trips-page-shell').removeClass('trips-no-results');
   $('.trips-container').empty();
   input_trips.forEach(t => { $('.trips-container').append(generateTripCard(t)) });
 }

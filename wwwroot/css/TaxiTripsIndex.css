@@ -84,10 +84,10 @@
     .layout-wrapper.layout-front-with-menu.front-navbar-mobile-only:has(.trips-page-shell)
     .layout-navbar
     .navbar.landing-navbar {
-    background: rgba(255, 255, 255, 0.55) !important;
-    backdrop-filter: saturate(140%) blur(12px);
-    -webkit-backdrop-filter: saturate(140%) blur(12px);
-    border-color: rgba(255, 255, 255, 0.45) !important;
+    background: #fff !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: #fff !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06) !important;
   }
 }
@@ -123,6 +123,12 @@
   margin-inline: 0 !important;
   /* Visible so city menus can escape; art clips itself via overflow:hidden */
   overflow: visible;
+  /* isolation makes this a stacking context — it must sit above later page sections */
+  z-index: 50;
+}
+
+.trips-page-shell .trips-search-hero:has(.dropdown-menu.show) {
+  z-index: 1090;
 }
 
 /* Art fills the whole hero band edge-to-edge (same idea as .landing-hero-stage-art) */
@@ -195,7 +201,7 @@
 
 .trips-search-hero .searchbar {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 @media (max-width: 767.98px) {
@@ -225,7 +231,7 @@
   flex-direction: row !important;
   gap: 0.25rem;
   max-width: 100%;
-  padding: 0.45rem 0.35rem;
+  padding: 0.3rem 0.3rem;
   border: 1px solid var(--border, #e4e4e7);
   border-radius: var(--radius-md, 0.875rem);
   background: var(--card, #fff);
@@ -235,7 +241,7 @@
   display: inline-grid;
   flex: 0 0 2rem;
   width: 2rem;
-  height: 2.75rem;
+  height: 2.25rem;
   place-items: center;
   align-self: center;
   padding: 0;
@@ -262,11 +268,11 @@
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.2rem 0.1rem 0.35rem;
+  padding: 0.1rem 0.05rem 0.15rem;
   scrollbar-width: none;
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
@@ -293,11 +299,11 @@
 .tripday > a {
   display: flex;
   width: 100%;
-  min-height: 4.5rem;
+  min-height: 3.5rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem 0.2rem;
+  padding: 0.3rem 0.15rem;
   border: 1px solid transparent;
   border-radius: inherit;
   background: var(--muted, #f4f4f5);
@@ -316,10 +322,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  margin: 0 0 0.35rem;
+  gap: 0.05rem;
+  margin: 0 0 0.2rem;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
@@ -352,8 +358,8 @@
   min-height: 1rem;
   padding: 0.1rem 0.3rem;
   border-radius: 999px;
-  background: var(--secondary, #f4f4f5);
-  color: var(--muted-foreground, #71717a);
+  background: transparent;
+  color: #16a34a;
   font-size: 0.5625rem;
   font-weight: 700;
   line-height: 1.2;
@@ -380,15 +386,85 @@
   opacity: 0.78;
 }
 
+.trips-no-results .tripday__availability {
+  display: none;
+}
+
 .tripday--selected .tripday__availability {
-  background: color-mix(in srgb, var(--primary-foreground, #fff) 16%, transparent);
+  background: transparent;
+  color: #4ade80;
+}
+
+/* Mobile order strip — compact segmented control under the date rail */
+.trips-mobile-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.55rem 0 0.65rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 0.85rem;
+  background: var(--card, #fff);
+}
+
+.trips-mobile-filters__label {
+  flex: 0 0 auto;
+  padding-inline-start: 0.45rem;
+  color: var(--muted-foreground, #71717a);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.trips-mobile-filters__seg {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.15rem;
+  border-radius: 0.7rem;
+  background: var(--muted, #f4f4f5);
+}
+
+.trips-mobile-filters__opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  margin: 0;
+  padding: 0.3rem 0.35rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--muted-foreground, #71717a);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.trips-mobile-filters__opt:hover {
+  color: var(--accent-foreground, #27272a);
+}
+
+.trips-mobile-filters .btn-check:checked + .trips-mobile-filters__opt {
+  background: var(--primary, #000);
   color: var(--primary-foreground, #fff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.trips-mobile-filters .btn-check:focus-visible + .trips-mobile-filters__opt {
+  outline: 2px solid var(--ring, #a1a1aa);
+  outline-offset: 2px;
 }
 
 @media (max-width: 575.98px) {
   .switchbar-container {
     gap: 0.15rem;
-    padding: 0.4rem 0.25rem;
+    padding: 0.25rem 0.2rem;
     border-radius: var(--radius-md, 0.875rem);
   }
 
@@ -1697,118 +1773,10 @@
   }
 }
 
-.trips-mobile-nav {
-  display: none;
-}
-
 @media (max-width: 991.98px) {
-  .trips-page-shell {
-    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .trips-mobile-nav {
-    position: fixed;
-    z-index: 1040;
-    inset-inline: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: 0.25rem;
-    min-height: 4.35rem;
-    padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid var(--brand-border, #e4e4e7);
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 -3px 8px rgba(24, 24, 27, 0.08);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    font-family: font-regular, "IRANSansX", Tahoma, sans-serif;
-  }
-
-  .trips-mobile-nav__item {
-    display: inline-flex;
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 3rem;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    padding: 0.25rem 0.1rem;
-    border: 0;
-    border-radius: 0.6rem;
-    background: transparent;
-    color: #71717a;
-    font: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .trips-mobile-nav__item .ti {
-    font-size: 1.2rem;
-    line-height: 1;
-  }
-
-  .trips-mobile-nav__item span {
-    overflow: hidden;
-    max-width: 100%;
-    font-size: 0.65rem;
-    font-weight: 500;
-    line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .trips-mobile-nav__item.is-active {
-    color: #8a5a00;
-  }
-
-  .trips-mobile-nav__item.is-active span {
-    font-weight: 700;
-  }
-
-  .trips-mobile-nav__item:focus-visible,
-  .trips-mobile-nav__action:focus-visible {
-    outline: 2px solid var(--brand-ink, #000);
-    outline-offset: 2px;
-  }
-
-  .trips-mobile-nav__action {
-    display: inline-grid;
-    flex: 0 0 3.45rem;
-    width: 3.45rem;
-    height: 3.45rem;
-    place-items: center;
-    margin-top: -1.25rem;
-    transform: translateY(-0.3rem);
-    border: 3px solid #fff;
-    border-radius: 50%;
-    background: #f5c542;
-    color: #18181b;
-    box-shadow: 0 4px 8px rgba(24, 24, 27, 0.16);
-    text-decoration: none;
-    transition: transform 160ms ease;
-  }
-
-  .trips-mobile-nav__action .ti {
-    font-size: 1.5rem;
-    line-height: 1;
-  }
-
-  .trips-mobile-nav__action:active {
-    transform: translateY(-0.3rem) scale(0.96);
-  }
-
   body:has(.trips-page-shell) .navbar-brand > [data-bs-target="#navbarSupportedContent"],
   body:has(.trips-page-shell) .navbar.landing-navbar .landing-nav-menu,
   body:has(.trips-page-shell) .navbar.landing-navbar .landing-menu-overlay {
     display: none !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .trips-mobile-nav__action {
-    transition: none;
   }
 }

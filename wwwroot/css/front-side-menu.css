@@ -26,6 +26,10 @@
 .layout-front-with-menu {
   --fsm-width: 16.25rem;
   --fsm-pad-x: 0.75rem;
+  --fsm-row-inset: 0.75rem;
+  --fsm-row-pad-x: 0.75rem;
+  --fsm-icon-slot: 1.5rem;
+  --fsm-icon-gap: 0.55rem;
   --fsm-bg: var(--sidebar, oklch(0.985 0 0));
   --fsm-bg-deep: var(--muted, oklch(0.97 0 0));
   --fsm-border: var(--sidebar-border, var(--border, oklch(0.922 0 0)));
@@ -57,7 +61,10 @@
   box-shadow: none !important;
 }
 
-.layout-front-with-menu .front-side-menu.menu-vertical,
+/*
+  Children fill the drawer; do NOT set width/max-width on .menu-vertical itself —
+  that used to override --fsm-width and stretch the mobile drawer to 100vw.
+*/
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-inner > .menu-item,
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-inner > .menu-header,
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-inner > .front-side-menu-upcoming-li {
@@ -157,30 +164,67 @@
 }
 
 .layout-front-with-menu .front-side-menu .menu-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--fsm-icon-gap);
   max-width: 100%;
   min-height: 2.75rem;
   font-family: font-regular, 'IRANSansX', Tahoma, sans-serif;
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.45;
   overflow: hidden;
+  border-radius: var(--fsm-radius-sm) !important;
 }
 
 .layout-front-with-menu .front-side-menu .menu-inner > .menu-item > .menu-link {
   color: var(--fsm-fg) !important;
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
   font-weight: 600;
+  margin-inline: var(--fsm-row-inset) !important;
+  padding-block: 0.55rem !important;
+  padding-inline: var(--fsm-row-pad-x) !important;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Reserve trailing space for Vuexy’s absolute chevron (physical left in RTL) */
+html[dir='rtl']
+  .layout-front-with-menu
+  .front-side-menu
+  .menu-inner
+  > .menu-item
+  > .menu-link.menu-toggle {
+  padding-left: 2.15rem !important;
+  padding-right: var(--fsm-row-pad-x) !important;
+}
+
+html:not([dir='rtl'])
+  .layout-front-with-menu
+  .front-side-menu
+  .menu-inner
+  > .menu-item
+  > .menu-link.menu-toggle {
+  padding-right: 2.15rem !important;
+  padding-left: var(--fsm-row-pad-x) !important;
 }
 
 .layout-front-with-menu .front-side-menu .menu-header {
-  padding: 1rem 1rem 0.35rem !important;
+  margin: 0.35rem 0 0.1rem;
+  padding: 0.85rem var(--fsm-row-inset) 0.4rem !important;
+}
+
+.layout-front-with-menu .front-side-menu .menu-header:first-child {
+  margin-top: 0;
+  padding-top: 0.55rem !important;
 }
 
 .layout-front-with-menu .front-side-menu .menu-header-text {
   color: var(--fsm-muted) !important;
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
 }
 
 .layout-front-with-menu .front-side-menu .menu-link:focus-visible,
@@ -190,6 +234,7 @@
 }
 
 .layout-front-with-menu .front-side-menu .menu-link > div:not(.badge) {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -218,13 +263,14 @@
   color: var(--fsm-muted) !important;
 }
 
-/* Open group (expanded, not current branch) — light accent only */
+/* Open / hover groups — quiet tinted pill */
 .layout-front-with-menu
   .front-side-menu.bg-menu-theme
   .menu-inner
   .menu-item.open:not(.active)
   > .menu-link.menu-toggle {
   background: var(--fsm-accent) !important;
+  border-color: color-mix(in oklch, var(--fsm-fg) 8%, transparent) !important;
 }
 
 html:not(.layout-menu-collapsed)
@@ -236,22 +282,26 @@ html:not(.layout-menu-collapsed)
   background: var(--fsm-accent) !important;
 }
 
-/* Active top-level (leaf OR group leader with active child) — solid black pill */
+/* Active top-level leaf — solid black pill */
 html[dir='rtl']
   .layout-front-with-menu
   .front-side-menu.bg-menu-theme.menu-vertical
   > .menu-inner
-  > .menu-item.active
+  > .menu-item.active:not(:has(> .menu-sub))
   > .menu-link,
-.layout-front-with-menu .front-side-menu.bg-menu-theme.menu-vertical > .menu-inner > .menu-item.active > .menu-link {
+.layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.active:not(:has(> .menu-sub))
+  > .menu-link {
   background: var(--fsm-active) !important;
   background-image: none !important;
   box-shadow: var(--shadow-sm, 0 1px 2px oklch(0.145 0 0 / 0.06)) !important;
   color: var(--fsm-active-fg) !important;
-  border-radius: var(--fsm-radius-sm) !important;
+  border-color: transparent !important;
 }
 
-/* Selected groups use the same restrained tint as expanded groups, not the leaf selection */
+/* Selected / open groups — same quiet pill, not the leaf black fill */
 html[dir='rtl']
   .layout-front-with-menu
   .front-side-menu.bg-menu-theme.menu-vertical
@@ -262,11 +312,16 @@ html[dir='rtl']
   .front-side-menu.bg-menu-theme.menu-vertical
   > .menu-inner
   > .menu-item.active
+  > .menu-link.menu-toggle,
+.layout-front-with-menu
+  .front-side-menu.bg-menu-theme.menu-vertical
+  > .menu-inner
+  > .menu-item.open
   > .menu-link.menu-toggle {
-  background: color-mix(in oklch, var(--fsm-fg) 2%, var(--fsm-bg)) !important;
+  background: var(--fsm-accent) !important;
   background-image: none !important;
   box-shadow: none !important;
-  border: 1px solid color-mix(in oklch, var(--fsm-fg) 6%, var(--fsm-bg)) !important;
+  border-color: color-mix(in oklch, var(--fsm-fg) 8%, transparent) !important;
   color: var(--fsm-fg) !important;
 }
 
@@ -299,29 +354,36 @@ html[dir='rtl']
   color: var(--fsm-active-fg) !important;
 }
 
-/* Nested links share a row width and inset, so active states form one column */
+/* Nested links: same row inset as parents so icons share one column */
 html[dir="rtl"] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link,
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link {
   display: flex !important;
-  align-items: center;
+  align-items: center !important;
   width: auto !important;
   max-width: 100%;
-  min-height: 2.75rem;
+  min-height: 2.55rem;
+  margin-inline: var(--fsm-row-inset) !important;
+  padding-block: 0.45rem !important;
+  padding-inline: var(--fsm-row-pad-x) !important;
   font-family: font-regular, 'IRANSansX', Tahoma, sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.5;
-  gap: 0.35rem;
+  line-height: 1.45;
+  gap: var(--fsm-icon-gap);
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 /* Don't let badge ms-auto stretch the sub-item to full menu width */
 .layout-front-with-menu .front-side-menu .menu-sub .menu-link .ms-auto,
 .layout-front-with-menu .front-side-menu .menu-sub .menu-link .menu-badge-new {
-  margin-inline-start: 0.15rem !important;
+  margin-inline-start: auto !important;
+  margin-inline-end: 0 !important;
   flex: 0 0 auto;
+  align-self: center;
 }
 
-/* Soft nested active — submenu children only */
+/* Soft nested active — same pill family as open parents */
 html[dir='rtl']
   .layout-front-with-menu
   .front-side-menu.bg-menu-theme
@@ -329,12 +391,12 @@ html[dir='rtl']
   .menu-item.active
   > .menu-link:not(.menu-toggle),
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item.active > .menu-link:not(.menu-toggle) {
-  background: color-mix(in oklch, var(--fsm-fg) 8%, transparent) !important;
+  background: color-mix(in oklch, var(--fsm-fg) 7%, var(--fsm-bg)) !important;
   background-image: none !important;
   box-shadow: none !important;
+  border-color: color-mix(in oklch, var(--fsm-fg) 8%, transparent) !important;
   color: var(--fsm-fg) !important;
   font-family: font-demi-bold, 'IRANSansX', Tahoma, sans-serif !important;
-  border-radius: var(--fsm-radius-sm) !important;
 }
 
 .layout-front-with-menu
@@ -350,13 +412,14 @@ html[dir='rtl']
 .layout-front-with-menu .front-side-menu img.menu-icon.menu-icon-3d,
 .layout-front-with-menu .front-side-menu iconify-icon.menu-icon.menu-icon-3d {
   display: block !important;
-  flex: 0 0 1.5rem !important;
-  width: 1.5rem !important;
-  height: 1.5rem !important;
-  min-width: 1.5rem !important;
-  max-width: 1.5rem !important;
+  flex: 0 0 var(--fsm-icon-slot) !important;
+  width: var(--fsm-icon-slot) !important;
+  height: var(--fsm-icon-slot) !important;
+  min-width: var(--fsm-icon-slot) !important;
+  max-width: var(--fsm-icon-slot) !important;
   margin: 0 !important;
-  margin-inline-end: 0.55rem !important;
+  /* gap on .menu-link handles spacing — no extra margin */
+  margin-inline-end: 0 !important;
   object-fit: contain;
   object-position: center;
   filter: none !important;
@@ -475,11 +538,11 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  flex: 0 0 1.375rem !important;
-  width: 1.375rem !important;
+  flex: 0 0 var(--fsm-icon-slot) !important;
+  width: var(--fsm-icon-slot) !important;
   font-size: 1.05rem !important;
   margin: 0 !important;
-  margin-inline-end: 0 !important; /* gap on .menu-link handles spacing */
+  margin-inline-end: 0 !important;
   color: var(--fsm-muted);
 }
 
@@ -496,13 +559,13 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
   .menu-link
   iconify-icon.menu-icon.menu-icon-3d {
   display: block !important;
-  flex: 0 0 1.375rem !important;
-  width: 1.375rem !important;
-  height: 1.375rem !important;
-  min-width: 1.375rem !important;
-  max-width: 1.375rem !important;
+  flex: 0 0 var(--fsm-icon-slot) !important;
+  width: var(--fsm-icon-slot) !important;
+  height: var(--fsm-icon-slot) !important;
+  min-width: var(--fsm-icon-slot) !important;
+  max-width: var(--fsm-icon-slot) !important;
   margin: 0 !important;
-  margin-inline-end: 0 !important; /* gap on .menu-link handles spacing */
+  margin-inline-end: 0 !important;
 }
 
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub > .menu-item > .menu-link::before {
@@ -511,14 +574,13 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 }
 
 /*
-  Nested rows: same horizontal inset as top-level links so icons stack in one column.
-  (Vuexy used padding-right: 2.875rem on submenu, which shoved nested icons sideways.)
+  Nested rows keep the same horizontal inset as top-level links (see rules above).
+  Kill Vuexy’s deep submenu padding that shoved nested icons sideways.
 */
 html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link,
 .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub .menu-link {
-  margin-inline: 1.5rem !important;
-  padding-inline-start: 1rem !important;
-  padding-inline-end: 0.85rem !important;
+  margin-inline: var(--fsm-row-inset) !important;
+  padding-inline: var(--fsm-row-pad-x) !important;
 }
 
 /* No edge rail on active groups (child selection already marks the branch) */
@@ -541,12 +603,17 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 }
 
 .layout-front-with-menu .front-side-menu .menu-badge-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #b42318;
   color: #fff;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  line-height: 1.2;
-  padding: 0.2rem 0.5rem;
+  line-height: 1;
+  padding: 0.28rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 /* Readable, consistent targets despite Vuexy's more specific menu rules */
@@ -556,19 +623,58 @@ html[dir='rtl'] .layout-front-with-menu .front-side-menu.menu-vertical .menu-sub
 }
 
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-inner > .menu-item > .menu-link {
-  min-height: 2.875rem !important;
-  font-size: 0.96875rem !important;
+  min-height: 2.75rem !important;
+  font-size: 0.9375rem !important;
   font-weight: 600 !important;
 }
 
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-link {
-  min-height: 2.875rem !important;
-  font-size: 0.90625rem !important;
+  min-height: 2.55rem !important;
+  font-size: 0.875rem !important;
+}
+
+.layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item:not(.active) > .menu-link:hover {
+  background: var(--fsm-accent) !important;
 }
 
 .layout-front-with-menu .front-side-menu.bg-menu-theme .menu-sub .menu-item.active > .menu-link:not(.menu-toggle) {
-  background: color-mix(in oklch, var(--fsm-fg) 10%, var(--fsm-bg)) !important;
+  background: color-mix(in oklch, var(--fsm-fg) 7%, var(--fsm-bg)) !important;
+  border-color: color-mix(in oklch, var(--fsm-fg) 8%, transparent) !important;
   font-weight: 600 !important;
+}
+
+/* Toggle chevron on the trailing edge (LTR: right, RTL: left) — never beside icons */
+html:not([dir='rtl'])
+  .layout-front-with-menu
+  .front-side-menu
+  .menu-inner
+  > .menu-item
+  > .menu-link.menu-toggle::after {
+  right: 0.85rem !important;
+  left: auto !important;
+}
+
+html[dir='rtl']
+  .layout-front-with-menu
+  .front-side-menu
+  .menu-inner
+  > .menu-item
+  > .menu-link.menu-toggle::after {
+  left: 0.85rem !important;
+  right: auto !important;
+}
+
+/* Breathing room between stacked pills so open parent + active child don’t fuse */
+.layout-front-with-menu .front-side-menu .menu-inner > .menu-item {
+  margin-block: 0.15rem !important;
+}
+
+.layout-front-with-menu .front-side-menu .menu-sub {
+  padding-block: 0.2rem 0.15rem !important;
+}
+
+.layout-front-with-menu .front-side-menu .menu-sub > .menu-item {
+  margin-block: 0.1rem !important;
 }
 
 /* Brand: unlock Vuexy clipped logo box for full mark */
@@ -1333,11 +1439,17 @@ html.layout-menu-fixed.layout-navbar-fixed
    <992px — off-canvas from the RIGHT
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 991.98px) {
+  .layout-front-with-menu {
+    --fsm-width: min(18.5rem, 88vw);
+  }
+
   .layout-front-with-menu .layout-menu.front-side-menu {
     right: 0 !important;
     left: auto !important;
     top: 0 !important;
     bottom: 0 !important;
+    width: var(--fsm-width) !important;
+    max-width: var(--fsm-width) !important;
     height: 100% !important;
     max-height: 100dvh !important;
     overflow: hidden !important;
@@ -1506,5 +1618,118 @@ html:not([dir=rtl]) .agency-support-modal .modal-simple .btn-close {
 
   .agency-support-modal__phone {
     font-size: 1.2rem;
+  }
+}
+
+/* ── Mobile bottom nav (search / tickets / reserve / account) ─────────────── */
+.trips-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .layout-front-with-menu .front-side-menu-content,
+  .layout-front-with-menu .trips-page-shell,
+  .layout-front-with-menu .agency-panel-shell {
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .trips-mobile-nav {
+    position: fixed;
+    z-index: 1040;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 0.25rem;
+    min-height: 4.35rem;
+    padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--brand-border, #e4e4e7);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 -3px 8px rgba(24, 24, 27, 0.08);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    font-family: font-regular, "IRANSansX", Tahoma, sans-serif;
+  }
+
+  .trips-mobile-nav__item {
+    display: inline-flex;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 3rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.25rem 0.1rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: transparent;
+    color: #71717a;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .trips-mobile-nav__item .ti {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .trips-mobile-nav__item span {
+    overflow: hidden;
+    max-width: 100%;
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .trips-mobile-nav__item.is-active {
+    color: #8a5a00;
+  }
+
+  .trips-mobile-nav__item.is-active span {
+    font-weight: 700;
+  }
+
+  .trips-mobile-nav__item:focus-visible,
+  .trips-mobile-nav__action:focus-visible {
+    outline: 2px solid var(--brand-ink, #000);
+    outline-offset: 2px;
+  }
+
+  .trips-mobile-nav__action {
+    display: inline-grid;
+    flex: 0 0 3.45rem;
+    width: 3.45rem;
+    height: 3.45rem;
+    place-items: center;
+    margin-top: -1.25rem;
+    transform: translateY(-0.3rem);
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: #f5c542;
+    color: #18181b;
+    box-shadow: 0 4px 8px rgba(24, 24, 27, 0.16);
+    text-decoration: none;
+    transition: transform 160ms ease;
+  }
+
+  .trips-mobile-nav__action .ti {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .trips-mobile-nav__action:active {
+    transform: translateY(-0.3rem) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trips-mobile-nav__action {
+    transition: none;
   }
 }

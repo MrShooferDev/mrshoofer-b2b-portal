@@ -20,11 +20,15 @@
         <div class="tripday @(today.Date == selected_date.Date ? "tripday--selected" : "")">
             @{
                 PersianDate today_pdate = new PersianDate(today);
-                string today_date_string = today_pdate.Year + "-" + today_pdate.Month + "-" + today_pdate.Day;
-                string today_searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={today_date_string}";
+                string today_date_slash = $"{today_pdate.Year}/{today_pdate.Month.ToString().PadLeft(2, '0')}/{today_pdate.Day.ToString().PadLeft(2, '0')}";
+                string today_searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={today_date_slash}";
             }
 
-            <a href="@today_searchstring" class="text-body" aria-current="@(today.Date == selected_date.Date ? "date" : null)">
+            <a href="@today_searchstring"
+               class="text-body tripday__link"
+               data-search-date="@today_date_slash"
+               data-weekday="@today_pdate.DayOfWeek"
+               aria-current="@(today.Date == selected_date.Date ? "date" : null)">
             <p class="daytext">
                 <span class="tripday__weekday">@today_pdate.DayOfWeek</span>
                 <span class="tripday__date">@today_pdate.Month/@today_pdate.Day</span>
@@ -49,10 +53,14 @@
             <div class="tripday @(today.Date == selected_date.Date ? "tripday--selected" : "")">
 
                 @{
-                    string date_string = today_pdate.Year + "-" + today_pdate.Month + "-" + today_pdate.Day;
-                    string searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={date_string}";
+                    string date_slash = $"{today_pdate.Year}/{today_pdate.Month.ToString().PadLeft(2, '0')}/{today_pdate.Day.ToString().PadLeft(2, '0')}";
+                    string searchstring = $"/TaxiTrips?originstring={ViewBag.origin_city_text}&destinationstring={ViewBag.dest_city_text}&searchdate={date_slash}";
                 }
-                <a href="@searchstring" class="text-body" aria-current="@(today.Date == selected_date.Date ? "date" : null)">
+                <a href="@searchstring"
+                   class="text-body tripday__link"
+                   data-search-date="@date_slash"
+                   data-weekday="@today_pdate.DayOfWeek"
+                   aria-current="@(today.Date == selected_date.Date ? "date" : null)">
 
                 <p class="daytext">
                     <span class="tripday__weekday">@today_pdate.DayOfWeek</span>

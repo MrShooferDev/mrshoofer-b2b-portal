@@ -156,6 +156,43 @@ body.login-sheet-open {
   }
 }
 
+/* Plain text links — no Bootstrap .btn chrome */
+.login-sheet__text-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.login-sheet__text-link:hover,
+.login-sheet__text-link:focus,
+.login-sheet__text-link:focus-visible,
+.login-sheet__text-link:active {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #1d4ed8;
+  text-decoration: underline;
+  outline: none;
+}
+
+.login-sheet__text-link:disabled {
+  opacity: 0.55;
+  text-decoration: none;
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .login-sheet__backdrop,
   .login-sheet__panel {
