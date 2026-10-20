@@ -1283,6 +1283,13 @@
 </div>
 
 <script>
+    (function () {
+        var paymentModal = document.getElementById('paymentmodal');
+        if (paymentModal && paymentModal.parentElement !== document.body) {
+            document.body.appendChild(paymentModal);
+        }
+    })();
+
     var pmTicketPrice = @ticketPrice;
     var pmAgencyBalance = @agencyBalance;
 
