@@ -66,4 +66,29 @@
 
 		Array.prototype.forEach.call(form.elements, normalizeElementValue);
 	});
+
+	// Host Bootstrap dialogs on <body>. Layout transforms/filters trap
+	// position:fixed modals while the backdrop stays on body, so the page
+	// goes dark/blurred and the dialog never receives clicks.
+	function hostModalsOnBody(root) {
+		var scope = root && root.querySelectorAll ? root : document;
+		var nodes = scope.querySelectorAll
+			? scope.querySelectorAll('.modal')
+			: [];
+		Array.prototype.forEach.call(nodes, function (modal) {
+			if (modal && modal.parentElement !== document.body) {
+				document.body.appendChild(modal);
+			}
+		});
+	}
+
+	hostModalsOnBody(document);
+
+	document.addEventListener('show.bs.modal', function (event) {
+		var modal = event.target;
+		if (modal && modal.classList && modal.classList.contains('modal') &&
+			modal.parentElement !== document.body) {
+			document.body.appendChild(modal);
+		}
+	});
 })();
