@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agency portal — pages &amp; journeys</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --card: #fff;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #e7e5e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2.5rem;
+    }
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: 1.35rem;
+      font-weight: 650;
+    }
+    p.lead {
+      margin: 0 0 1.25rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      padding: 1rem 1rem 0.5rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Agency portal — pages &amp; journeys</h1>
+    <p class="lead">
+      Open this file in a browser to see the diagrams.
+      Source catalog:
+      <a href="../agency-pages-and-journeys.md">agency-pages-and-journeys.md</a>
+    </p>
+
+    <section aria-labelledby="journeys-title">
+      <h2 id="journeys-title">Main journeys</h2>
+      <pre class="mermaid">
+flowchart TB
+  subgraph auth [Auth]
+    Login["/Auth/Login"]
+    OTP["/Auth/Loginotp"]
+    Reg["/CreateAccount"]
+    Login --> Home
+    OTP --> Home
+    Reg --> Login
+  end
+
+  subgraph book [Book trip]
+    Home["/Home"]
+    Search["/TaxiTrips"]
+    Reserve["/Reserve/Reservetrip"]
+    Confirm["/Reserve/ConfirmInfo"]
+    Done["/Reserve/ReserveConfirmed"]
+    Home --> Search --> Reserve --> Confirm --> Done
+    Confirm -->|low balance| Charge
+  end
+
+  subgraph tickets [Tickets]
+    TicketInfo["/TicketInfo"]
+    Print["TripReceiptPDF"]
+    Done --> TicketInfo
+    TicketInfo -->|row: چاپ بلیط| Print
+  end
+
+  subgraph invoice [Official invoice]
+    InvConfirm["Row → confirm this ticket → درخواست صدور"]
+    InvBrowse["Toolbar / OfficialInvoices → multi-select"]
+    InvPrint["/OfficialInvoices/Print"]
+    InvCancel["لغو درخواست"]
+    TicketInfo -->|row: فاکتور رسمی| InvConfirm --> InvPrint
+    TicketInfo -->|toolbar صدور| InvBrowse --> InvPrint
+    InvList["/OfficialInvoices"] --> InvBrowse
+    InvList --> InvCancel
+    InvList --> InvPrint
+  end
+
+  subgraph account [Account]
+    Agency["/Agency"]
+    Balance["#balance"]
+    Charge["Charge → Zarinpal"]
+    Legal["LegalProfile"]
+    Agency --> Balance --> Charge
+    Agency --> Legal
+  end
+
+  subgraph people [People and reports]
+    Employees["/Employees"]
+    EmpTrips["/Employees/Trips"]
+    Analytics["/Analytics"]
+    Employees --> EmpTrips
+    Employees --> Analytics
+  end
+      </pre>
+    </section>
+
+    <section aria-labelledby="menu-title">
+      <h2 id="menu-title">Side menu → pages</h2>
+      <pre class="mermaid">
+flowchart LR
+  subgraph menu [Side menu]
+    M1[سفر جدید] --> Home2["/Home"]
+    M2[سفرهای ثبت شده] --> T["/TicketInfo"]
+    M3[اعضا / مشتریان] --> E["/Employees"]
+    M4[فاکتورها] --> I["/OfficialInvoices"]
+    M5[گزارشات] --> A["/Analytics"]
+    M6[مدیریت اعتبار] --> B["/Agency#balance"]
+    M7[تنظیمات] --> Ag["/Agency"]
+  end
+      </pre>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "neutral",
+      flowchart: { curve: "basis", htmlLabels: true }
+    });
+  </script>
+</body>
+</html>

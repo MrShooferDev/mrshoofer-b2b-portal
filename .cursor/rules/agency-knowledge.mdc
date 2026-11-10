@@ -1,0 +1,34 @@
+---
+description: Where Agency page/journey knowledge lives (cheap pointer)
+alwaysApply: true
+---
+
+# Agency knowledge base
+
+## Source of truth
+
+- Catalog: `docs/agency-pages-and-journeys.md`
+- Flow map (browser): `docs/visuals/agency-pages-and-journeys.html`
+- UML sequences (browser): `docs/visuals/agency-journeys-sequence.html`
+- Index: `docs/README.md` · root `README.md` · `AGENTS.md`
+
+## When to open the catalog
+
+Read the catalog **only if** the task needs a page, route, menu item, or end-to-end journey. Do not load it for unrelated code edits.
+
+## Mini route map
+
+| Area | Route |
+|---|---|
+| New trip | `/Home`, `/TaxiTrips` |
+| Book | `/Reserve/*` |
+| Tickets | `/TicketInfo` |
+| Invoices | `/OfficialInvoices` |
+| Profile / charge | `/Agency`, `/Agency#balance` |
+| Members | `/Employees` |
+| Reports | `/Analytics` |
+| Auth / register | `/Auth/*`, `/CreateAccount` |
+
+## After changing a journey
+
+Update `docs/agency-pages-and-journeys.md` and the flowchart + sequence visuals in the same change.

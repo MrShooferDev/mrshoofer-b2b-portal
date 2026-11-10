@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agency portal — UML sequence diagrams</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --card: #fff;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #e7e5e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2.5rem;
+    }
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: 1.35rem;
+      font-weight: 650;
+    }
+    p.lead {
+      margin: 0 0 1.25rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    nav.toc a {
+      font-size: 0.85rem;
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      padding: 1rem 1rem 0.5rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .mermaid { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Agency portal — UML sequence diagrams</h1>
+    <p class="lead">
+      Current journeys from the knowledge base.
+      Catalog: <a href="../agency-pages-and-journeys.md">agency-pages-and-journeys.md</a>
+    </p>
+    <nav class="toc" aria-label="Diagrams">
+      <a href="#book">Book trip</a>
+      <a href="#invoice-row">Invoice (row confirm)</a>
+      <a href="#invoice-browse">Invoice (browse)</a>
+      <a href="#cancel">Cancel pending</a>
+      <a href="#charge">Charge wallet</a>
+    </nav>
+
+    <section id="book" aria-labelledby="book-title">
+      <h2 id="book-title">1) Book a trip</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant Home as Home / TaxiTrips
+  participant Reserve as Reserve
+  participant Pay as Wallet / Zarinpal
+  participant Ticket as TicketInfo
+
+  User->>Home: Search origin / dest / date
+  Home-->>User: Trip results
+  User->>Reserve: Select trip (Reservetrip)
+  User->>Reserve: Submit passenger info
+  Reserve->>Reserve: ConfirmInfo
+  alt Balance OK
+    Reserve->>Pay: Debit wallet
+  else Low balance
+    Reserve-->>User: Charge shortcut
+    User->>Pay: Charge via Zarinpal
+    Pay-->>Reserve: Resume
+  end
+  Pay-->>Reserve: Payment OK
+  Reserve-->>User: ReserveConfirmed
+  Reserve->>Ticket: Ticket appears on list
+      </pre>
+    </section>
+
+    <section id="invoice-row" aria-labelledby="invoice-row-title">
+      <h2 id="invoice-row-title">2) Official invoice — row (confirm this ticket)</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant Tickets as TicketInfo
+  participant Modal as Invoice modal (confirm)
+  participant API as OfficialInvoices
+  participant Print as Print view
+
+  User->>Tickets: عملیات → فاکتور رسمی
+  Tickets->>Modal: Open with data-ticket-code
+  Modal->>API: GET EligibleTickets
+  API-->>Modal: Ticket list
+  Modal-->>User: Confirm card (this ticket only)
+  User->>Modal: درخواست صدور
+  Modal->>API: POST CreateMulti [this code]
+  API-->>Modal: printUrl
+  Modal->>Print: Navigate to Print
+  Print-->>User: Invoice preview
+      </pre>
+    </section>
+
+    <section id="invoice-browse" aria-labelledby="invoice-browse-title">
+      <h2 id="invoice-browse-title">3) Official invoice — browse / multi-select</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant Entry as TicketInfo toolbar / OfficialInvoices
+  participant Modal as Invoice modal (browse)
+  participant API as OfficialInvoices
+  participant Print as Print view
+
+  User->>Entry: صدور فاکتور رسمی
+  Entry->>Modal: Open browse mode
+  Modal->>API: GET EligibleTickets
+  API-->>Modal: Eligible + blocked tickets
+  Modal-->>User: Multi-select list
+  User->>Modal: Select tickets → صدور فاکتور
+  Modal->>API: POST CreateMulti [codes]
+  API-->>Modal: printUrl
+  Modal->>Print: Navigate to Print
+      </pre>
+    </section>
+
+    <section id="cancel" aria-labelledby="cancel-title">
+      <h2 id="cancel-title">4) Cancel pending invoice</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant List as OfficialInvoices
+  participant Swal as SweetAlert
+  participant API as OfficialInvoices API
+
+  User->>List: عملیات → لغو درخواست
+  List->>Swal: Confirm cancel?
+  User->>Swal: بله، لغو شود
+  Swal->>API: POST CancelPending
+  API-->>List: Tickets freed / list refresh
+      </pre>
+    </section>
+
+    <section id="charge" aria-labelledby="charge-title">
+      <h2 id="charge-title">5) Charge wallet</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  actor User
+  participant Agency as Agency #balance
+  participant Pay as Payments
+  participant ZP as Zarinpal
+
+  User->>Agency: شارژ حساب / open charge modal
+  User->>Agency: Enter amount
+  Agency->>Pay: InitiateZarinpalCharge
+  Pay->>ZP: Create payment
+  ZP-->>User: Gateway
+  User->>ZP: Pay
+  ZP->>Pay: Callback
+  Pay-->>Agency: Balance updated
+      </pre>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "neutral",
+      sequence: { actorMargin: 28, mirrorActors: false }
+    });
+  </script>
+</body>
+</html>

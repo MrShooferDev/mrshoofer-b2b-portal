@@ -1,0 +1,32 @@
+---
+description: How to scope and shape Agency action journeys (row actions → modals)
+alwaysApply: true
+---
+
+# Agency journeys — scope & confirm pattern
+
+## Scope only what was asked
+
+- Fix **one journey** when the user names it (e.g. tickets-page row → فاکتور رسمی).
+- Leave other correct entry points alone (top CTA browse, OfficialInvoices multi-select, etc.) until asked.
+- Do not “while I’m here” redesign sibling flows.
+
+## Row / item action → confirm this item
+
+When the user acts on a **specific** ticket/trip/row:
+
+1. Open a **confirm** step for that item — not a full multi-select list with the item buried/unselected.
+2. Lead with: clear question (e.g. آیا می‌خواهید برای این بلیط فاکتور رسمی صادر شود؟).
+3. Show the important facts of **that** record (passenger, route, then secondary meta).
+4. Primary action confirms that one item; use the user’s exact CTA wording when given.
+5. No “pick other items” switch on the confirm step unless requested.
+
+## Browse / multi-select stays separate
+
+- Entry points without a preselected item may keep the list/browse UI.
+- Do not force browse UX onto a scoped row action, or confirm UX onto a deliberate multi-select page, unless asked.
+
+## Verify the named path
+
+- After changing a journey: hard-refresh and check the **named** path end-to-end (open → confirm/list → CTA state).
+- Confirm other journeys only enough to ensure they were not accidentally broken.

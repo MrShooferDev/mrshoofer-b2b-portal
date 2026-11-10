@@ -10,24 +10,28 @@ Apply these on every Agency UI / modal / table change unless the user overrides 
 ## Copy & language
 
 - Persian UI copy matters: prefer **exact wording** the user provides; do not “improve” marketing tone.
-- Prefer short, actionable labels over explanatory chrome.
+- Prefer short, actionable labels over explanatory chrome (e.g. confirm CTA `درخواست صدور`, not a longer invented phrase).
 - Subtitles should explain **what to do**, not dump counts/stats unless asked.
+- Align hint/subcopy with the primary button label when the user renames that button.
 - Avoid redundant status labels (e.g. don’t show a “already done / travelled” chip if absence is enough).
 
 ## Information hierarchy (lists & rows)
 
 - Trip/ticket rows: **passenger full name first**, **route/direction second** (most important).
 - Demote codes, national IDs, service names, and dates to secondary meta.
+- In confirm cards: passenger + route as the head; do **not** repeat them again in the facts list.
 - Sort **actionable/selectable items before blocked/unselectable** ones.
 - For cancelled / dead records: **hide action menus** entirely (not just disable items).
 
 ## Controls & chrome
 
 - Remove filters/buttons that don’t change a real decision (keep period/search if useful).
+- Do **not** add escape hatches (“انتخاب بلیط‌های دیگر”, secondary browse links) on confirm steps unless asked.
 - Search fields: include a proper search icon; keep placeholder text readable (no overlap).
 - Clear/reset selection: icon button (prefer dismiss/cross), outline-danger idle → **filled danger when there is something to clear**.
 - Destructive actions (cancel/delete/revoke): always confirm with a **minimal SweetAlert** before submit; never fire immediately on click.
 - After a successful create/issue flow: **navigate to the result** — no celebratory success popup unless asked.
+- When an item is blocked/ineligible: honest copy + **hide or disable** the primary submit — never leave a tempting enabled CTA.
 
 ## Empty & loading states
 
@@ -41,8 +45,10 @@ Apply these on every Agency UI / modal / table change unless the user overrides 
 - Prefer outline variants for idle secondary actions; filled only for active/affirmative/destructive-ready states.
 - Badges: only when they add signal (e.g. “جدید” for very recent). Use a clear red pill for “جدید” when that rule applies.
 - Don’t invent purple/glow AI aesthetics; match the current portal look.
+- Mobile/tablet drawers & menus: **dim overlay only** — never frost the page with `backdrop-filter` / blur. Keep the drawer above the overlay in z-index.
 
 ## Prompt efficiency (when user sends UI polish)
 
 - If several adjacent tweaks target the same surface, implement them as **one pass** and verify once.
 - Prefer end-state acceptance (“cancelled rows have no عملیات”) over DOM-path dumps unless location is ambiguous.
+- When told to continue: resume the unfinished work directly — no recap, no “I’ll continue”.
