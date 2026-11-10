@@ -15,6 +15,7 @@ import {
 } from "./ui/index";
 import { DrawerPlacements } from "./demos/DrawerPlacements";
 import { AppLayout } from "./AppLayout/AppLayout";
+import { RegistrationApp } from "./registration/RegistrationApp";
 
 document.querySelectorAll<HTMLElement>("[data-ca-app-layout]").forEach((mount) => {
   const { defaultCurrent, defaultSection, defaultCollapsed } = mount.dataset;
@@ -33,6 +34,10 @@ document.querySelectorAll<HTMLElement>("[data-ca-app-layout]").forEach((mount) =
       onNewChat={() => emit("new-chat", {})}
     />,
   );
+});
+
+document.querySelectorAll<HTMLElement>("[data-b2b-registration]").forEach((mount) => {
+  createRoot(mount).render(<RegistrationApp />);
 });
 
 const items: TabItem[] = [

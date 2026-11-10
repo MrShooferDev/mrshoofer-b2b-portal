@@ -120,6 +120,50 @@
   vertical-align: -0.2em;
 }
 
+.invoice-list__trip {
+  min-width: 10rem;
+  max-width: 18rem;
+}
+
+.invoice-list__passenger {
+  font-family: font-bold, "IRANSansX", Tahoma, sans-serif;
+  font-weight: 650;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--bs-body-color);
+}
+
+.invoice-list__route {
+  font-family: font-demi-bold, "IRANSansX", Tahoma, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 0.1rem;
+  color: var(--bs-body-color);
+}
+
+.invoice-cancel-swal {
+  width: min(22rem, calc(100vw - 2rem)) !important;
+  padding: 1.25rem 1.1rem 1.1rem !important;
+  border-radius: 0.85rem !important;
+}
+
+.invoice-cancel-swal .swal2-title {
+  font-size: 1.05rem !important;
+  margin: 0.35rem 0 0.35rem !important;
+}
+
+.invoice-cancel-swal .swal2-html-container {
+  font-size: 0.85rem !important;
+  margin: 0 0 1rem !important;
+  color: var(--bs-secondary-color);
+}
+
+.invoice-cancel-swal .swal2-actions {
+  gap: 0.4rem;
+  margin: 0 !important;
+}
+
 @media (max-width: 767.98px) {
   .invoice-list .card-widget-separator .border-end {
     border-inline-end: 0 !important;

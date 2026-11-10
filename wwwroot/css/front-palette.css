@@ -26,7 +26,7 @@ html.light-style body,
   color: var(--brand-ink);
 }
 
-/* Vuexy purple → black brand (must beat theme-default !important) */
+/* Vuexy purple → Vega neutrals (must beat theme-default / TemplateCustomizer) */
 :root,
 [data-bs-theme="light"],
 html.light-style {
@@ -35,6 +35,13 @@ html.light-style {
   --bs-link-color: #000000 !important;
   --bs-link-hover-color: #333333 !important;
   --bs-link-color-rgb: 0, 0, 0 !important;
+  --bs-body-bg: var(--background, oklch(1 0 0)) !important;
+  --bs-body-color: var(--foreground, oklch(0.145 0 0)) !important;
+  --bs-heading-color: var(--foreground, oklch(0.145 0 0)) !important;
+  --bs-secondary-color: var(--muted-foreground, oklch(0.556 0 0)) !important;
+  --bs-secondary-bg: var(--muted, oklch(0.97 0 0)) !important;
+  --bs-tertiary-bg: var(--muted, oklch(0.97 0 0)) !important;
+  --bs-border-color: var(--border, oklch(0.922 0 0)) !important;
 }
 
 .text-primary,
@@ -72,10 +79,10 @@ a.bg-primary:focus {
   background: transparent !important;
 }
 
-a:not(.btn):not(.nav-link):not(.dropdown-item):not(.navbar-nav-btn):not(.footer-link) {
+a:not(.btn):not(.nav-link):not(.dropdown-item):not(.navbar-nav-btn):not(.footer-link):not(.trips-mobile-nav__item):not(.trips-mobile-nav__action) {
   color: #000000 !important;
 }
-a:not(.btn):not(.nav-link):not(.dropdown-item):not(.navbar-nav-btn):not(.footer-link):hover {
+a:not(.btn):not(.nav-link):not(.dropdown-item):not(.navbar-nav-btn):not(.footer-link):not(.trips-mobile-nav__item):not(.trips-mobile-nav__action):hover {
   color: #333333 !important;
 }
 
@@ -264,6 +271,9 @@ a:not(.btn):not(.nav-link):not(.dropdown-item):not(.footer-link) {
 
 .section-title {
   color: var(--brand-ink);
+  /* Override Vuexy front-page z-index:1 so titles don't cover open selects */
+  z-index: auto;
+  isolation: isolate;
 }
 
 .section-title::after {

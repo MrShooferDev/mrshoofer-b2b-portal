@@ -138,7 +138,20 @@ function cityPickerDropdown(input) {
   if (!input || typeof bootstrap === 'undefined') return null;
   return bootstrap.Dropdown.getOrCreateInstance(input, {
     autoClose: 'outside',
-    offset: [0, 8]
+    offset: [0, 8],
+    // Avoid translate3d compositing lag when the menu opens over the hero.
+    popperConfig: function (defaultConfig) {
+      const modifiers = (defaultConfig && defaultConfig.modifiers ? defaultConfig.modifiers.slice() : []);
+      const withoutCompute = modifiers.filter(function (m) { return !m || m.name !== 'computeStyles'; });
+      withoutCompute.push({
+        name: 'computeStyles',
+        options: { adaptive: false, gpuAcceleration: false }
+      });
+      return Object.assign({}, defaultConfig, {
+        strategy: 'absolute',
+        modifiers: withoutCompute
+      });
+    }
   });
 }
 

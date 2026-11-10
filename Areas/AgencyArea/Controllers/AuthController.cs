@@ -1,5 +1,6 @@
 using Application.Data;
 using Application.Services.Auth;
+using Application.Services.Dev;
 using Application.ViewModels.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,13 +19,23 @@ namespace Application.Areas.AgencyArea
     private readonly UserManager<IdentityUser> _usermanager;
     private readonly IOtpLogin _otpLogin;
     private readonly AppDbContext _db;
+    private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _config;
 
-    public AuthController(SignInManager<IdentityUser> signInManager, IOtpLogin otplogin, UserManager<IdentityUser> usermanager, AppDbContext db)
+    public AuthController(
+      SignInManager<IdentityUser> signInManager,
+      IOtpLogin otplogin,
+      UserManager<IdentityUser> usermanager,
+      AppDbContext db,
+      IWebHostEnvironment env,
+      IConfiguration config)
     {
       _otpLogin = otplogin;
       _signInManager = signInManager;
       _usermanager = usermanager;
       _db = db;
+      _env = env;
+      _config = config;
     }
 
     [HttpGet]
@@ -90,6 +101,7 @@ namespace Application.Areas.AgencyArea
         var result = await _signInManager.PasswordSignInAsync(user, viewmodel.Password, viewmodel.RemmemberMe, lockoutOnFailure: false);
         if (user != null && result.Succeeded)
         {
+          ClearDevSkipAutoLoginCookie();
           await FlagIncompleteFinancialInfoAsync(user);
 
           // Redirect or take further action
@@ -190,6 +202,8 @@ namespace Application.Areas.AgencyArea
         ViewBag.LoginAction = "AdminLoginPost";
         return View("Login", viewmodel);
       }
+
+      ClearDevSkipAutoLoginCookie();
 
       if (Url.IsLocalUrl(adminReturnUrl))
       {
@@ -346,6 +360,7 @@ namespace Application.Areas.AgencyArea
 
       // Logging in the user
       await _signInManager.SignInAsync(user, true, "OTP");
+      ClearDevSkipAutoLoginCookie();
       await FlagIncompleteFinancialInfoAsync(user);
       
       // Redirect to ReturnUrl if provided and is local
@@ -361,8 +376,34 @@ namespace Application.Areas.AgencyArea
     public async Task<IActionResult> Logout()
     {
       await _signInManager.SignOutAsync();
+      RememberDevSkipAutoLogin();
 
       return RedirectToAction("Index", "Home");
+    }
+
+    private void RememberDevSkipAutoLogin()
+    {
+      if (!_env.IsDevelopment() || !_config.GetValue("DevAuth:AutoLogin", true))
+        return;
+
+      Response.Cookies.Append(
+        DevelopmentBootstrap.SkipAutoLoginCookie,
+        "1",
+        new CookieOptions
+        {
+          HttpOnly = true,
+          IsEssential = true,
+          SameSite = SameSiteMode.Lax,
+          Expires = DateTimeOffset.UtcNow.AddHours(12)
+        });
+    }
+
+    private void ClearDevSkipAutoLoginCookie()
+    {
+      if (!_env.IsDevelopment())
+        return;
+
+      Response.Cookies.Delete(DevelopmentBootstrap.SkipAutoLoginCookie);
     }
 
     private async Task FlagIncompleteFinancialInfoAsync(IdentityUser user)

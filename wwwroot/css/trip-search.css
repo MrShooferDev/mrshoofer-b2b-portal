@@ -63,6 +63,7 @@ body.city-picker-open .landing-navbar {
     overflow: hidden !important;
     padding: 0.35rem !important;
     transition: none !important;
+    animation: none !important;
     z-index: 60 !important;
     min-width: 100% !important;
     width: max(100%, 18.5rem) !important;
@@ -84,25 +85,18 @@ body.city-picker-open .landing-navbar {
     flex-direction: column;
     max-height: calc(min(52dvh, 26rem) - 0.7rem);
     overflow: hidden;
+    /* Instant open — opacity/transform enter fought Popper and felt laggy */
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
   }
 
   #tripForm .dropdown-menu.origin_location.show .city-picker,
   #tripForm .dropdown-menu.destination_location.show .city-picker,
   .searchbar .dropdown-menu.origin_location.show .city-picker,
   .searchbar .dropdown-menu.destination_location.show .city-picker {
-    animation: city-picker-popover-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  @keyframes city-picker-popover-in {
-    from {
-      opacity: 0;
-      transform: translateY(-0.4rem);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    animation: none !important;
   }
 
   #tripForm .dropdown-menu .city-picker__head {
@@ -626,35 +620,22 @@ body.city-picker-open .landing-navbar {
 
   body > .dropdown-menu.origin_location.show .city-picker,
   body > .dropdown-menu.destination_location.show .city-picker {
-    animation: city-picker-drawer-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    /* Opacity-only, short — avoid transform on full-viewport drawers */
+    animation: city-picker-drawer-in 100ms ease-out both;
   }
 
   @keyframes city-picker-drawer-in {
-    from {
-      opacity: 0.7;
-      transform: translateY(0.65rem);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0.88; }
+    to { opacity: 1; }
   }
 
   body > .dropdown-menu.destination_location.show .city-picker--handoff {
-    animation: city-picker-handoff-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: city-picker-handoff-in 120ms ease-out both;
   }
 
   @keyframes city-picker-handoff-in {
-    from {
-      opacity: 0.55;
-      transform: translateX(1.25rem);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0.85; }
+    to { opacity: 1; }
   }
 
   #tripForm .input-container .city-picker i:not(.ti-search),

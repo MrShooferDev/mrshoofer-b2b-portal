@@ -29,6 +29,10 @@
     {
         <link rel="stylesheet" href="~/css/login-sheet.css" asp-append-version="true" />
     }
+    @if (isSideMenu)
+    {
+        <link rel="stylesheet" href="~/css/ticket-preview-modal.css" asp-append-version="true" />
+    }
     @RenderSection("PageStyles", required: false)
 }
 
@@ -55,6 +59,7 @@
     @if (isSideMenu)
     {
         <script src="~/js/front-side-menu.js" asp-append-version="true"></script>
+        <script src="~/js/ticket-preview-modal.js" asp-append-version="true"></script>
     }
     @if (showLoginSheet)
     {
@@ -84,6 +89,7 @@
                         @await Html.PartialAsync("Sections/Footer/_FooterFront")
                     }
                     @await Html.PartialAsync("_AgencySupportModal")
+                    @await Html.PartialAsync("_TicketPreviewModal")
                     <div class="content-backdrop fade"></div>
                 </div>
             </div>

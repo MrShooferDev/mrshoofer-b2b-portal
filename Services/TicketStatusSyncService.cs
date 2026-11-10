@@ -74,6 +74,8 @@ namespace Application.Services
       var codes = ticketCodes
         .Where(c => !string.IsNullOrWhiteSpace(c))
         .Select(c => c.Trim())
+        // Local DEV-* samples are not registered on ORS.
+        .Where(c => !c.StartsWith("DEV-", StringComparison.OrdinalIgnoreCase))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .Take(30)
         .ToList();

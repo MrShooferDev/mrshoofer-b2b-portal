@@ -28,7 +28,11 @@ namespace Application.Areas.AgencyArea
       _ticketStatusSync = ticketStatusSync;
     }
 
-    public async Task<IActionResult> Index(int page = 1, string? datesFilter = null)
+    public async Task<IActionResult> Index(
+      int page = 1,
+      string? datesFilter = null,
+      int openInvoice = 0,
+      string? ticketcode = null)
     {
       if (page < 1) page = 1;
 
@@ -37,6 +41,9 @@ namespace Application.Areas.AgencyArea
         .Include(a => a.IdentityUser)
         .AsNoTracking()
         .FirstOrDefaultAsync(a => a.IdentityUser.UserName == username);
+
+      ViewBag.openInvoiceModal = openInvoice == 1;
+      ViewBag.preselectTicketCode = string.IsNullOrWhiteSpace(ticketcode) ? null : ticketcode.Trim();
 
       if (agency == null)
       {

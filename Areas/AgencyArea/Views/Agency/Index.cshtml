@@ -1,10 +1,13 @@
 @using Application.Models
+@using Application.Services
+@using Application.ViewModels.Agency
 @{
 	Layout = "_AgencySideLayout";
 	ViewData["Title"] = "پروفایل آژانس";
 
 	var agency = ViewBag.agency as Agency;
 	var agancy_balance = ViewBag.agancy_balance != null ? Convert.ToInt64(ViewBag.agancy_balance) : 0L;
+	var finance = ViewBag.financeLedger as AgencyFinanceLedgerViewModel ?? new AgencyFinanceLedgerViewModel();
 	var isOrganization = agency?.IsOrganization == true;
 	var panelLabel = isOrganization ? "سازمانی" : "فروشنده";
 	var hasFinancial = agency?.HasInvoiceFinancialInfo == true;
@@ -162,12 +165,16 @@
 				</span>
 				<div>
 					<h5 class="card-title mb-0">مدیریت اعتبار</h5>
-					<small class="text-muted">موجودی حساب و افزایش شارژ</small>
+					<small class="text-muted">موجودی، شارژها و هزینه‌های کیف پول</small>
 				</div>
 			</div>
+			<button class="btn btn-primary" data-bs-target="#referAndEarn" data-bs-toggle="modal" type="button">
+				<iconify-icon class="fc-icon me-1" icon="fluent-color:add-circle-24" width="18" height="18" aria-hidden="true"></iconify-icon>
+				افزایش موجودی
+			</button>
 		</div>
 		<div class="card-body">
-			<div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+			<div class="agency-finance__wallet">
 				<div>
 					<small class="text-muted d-block">موجودی اعتبار</small>
 					<p class="agency-dashboard__wallet-amount mb-0">
@@ -175,10 +182,138 @@
 						<small class="fs-6 fw-normal text-muted">تومان</small>
 					</p>
 				</div>
-				<button class="btn btn-primary" data-bs-target="#referAndEarn" data-bs-toggle="modal" type="button">
-					<iconify-icon class="fc-icon me-1" icon="fluent-color:add-circle-24" width="18" height="18" aria-hidden="true"></iconify-icon>
-					افزایش موجودی
-				</button>
+			</div>
+
+			<div class="agency-finance__summary" role="group" aria-label="خلاصه مالی">
+				<div class="agency-finance__stat agency-finance__stat--credit">
+					<span class="agency-finance__stat-label">مجموع شارژها</span>
+					<strong class="agency-finance__stat-value">@finance.TotalCharged.ToString("N0")</strong>
+					<span class="agency-finance__stat-meta">@finance.ChargeCount.ToString("N0") تراکنش</span>
+				</div>
+				<div class="agency-finance__stat agency-finance__stat--debit">
+					<span class="agency-finance__stat-label">مجموع هزینه‌ها</span>
+					<strong class="agency-finance__stat-value">@finance.TotalSpent.ToString("N0")</strong>
+					<span class="agency-finance__stat-meta">@finance.SpendCount.ToString("N0") تراکنش</span>
+				</div>
+				<div class="agency-finance__stat agency-finance__stat--net">
+					<span class="agency-finance__stat-label">خالص ثبت‌شده</span>
+					<strong class="agency-finance__stat-value">@finance.Net.ToString("N0")</strong>
+					<span class="agency-finance__stat-meta">شارژ منهای هزینه</span>
+				</div>
+			</div>
+
+			<div class="agency-finance__toolbar">
+				<div class="agency-finance__filters" role="tablist" aria-label="فیلتر تراکنش‌ها">
+					<button type="button" class="agency-finance__filter is-active" data-finance-filter="all" role="tab" aria-selected="true">همه</button>
+					<button type="button" class="agency-finance__filter" data-finance-filter="charge" role="tab" aria-selected="false">شارژ</button>
+					<button type="button" class="agency-finance__filter" data-finance-filter="spend" role="tab" aria-selected="false">هزینه</button>
+					<button type="button" class="agency-finance__filter" data-finance-filter="pending" role="tab" aria-selected="false">در انتظار / ناموفق</button>
+				</div>
+				<small class="agency-finance__hint text-muted">مبالغ به تومان</small>
+			</div>
+
+			<div class="agency-finance__table-wrap agency-dashboard__scroll">
+				<table class="table agency-dashboard__table agency-finance__table" id="agencyFinanceTable">
+					<thead>
+						<tr>
+							<th scope="col">تاریخ</th>
+							<th scope="col">شرح</th>
+							<th scope="col">مرجع</th>
+							<th scope="col">وضعیت</th>
+							<th scope="col" class="text-end">مبلغ</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (finance.Entries.Count == 0)
+						{
+							<tr class="agency-finance__empty-row" data-finance-kind="all">
+								<td colspan="5">
+									<div class="agency-finance__empty">
+										<span class="agency-finance__empty-icon" aria-hidden="true">
+											<iconify-icon icon="fluent-color:receipt-24" width="28" height="28"></iconify-icon>
+										</span>
+										<p class="mb-1 fw-medium">هنوز تراکنشی ثبت نشده</p>
+										<small class="text-muted">پس از شارژ کیف پول یا صدور بلیط، گردش مالی اینجا نمایش داده می‌شود.</small>
+									</div>
+								</td>
+							</tr>
+						}
+						else
+						{
+							foreach (var entry in finance.Entries)
+							{
+								var pdate = entry.At.ToPersianDate();
+								var kindKey = entry.Kind switch
+								{
+									AgencyFinanceKind.Charge => "charge",
+									AgencyFinanceKind.Spend => "spend",
+									_ => "pending"
+								};
+								var amountClass = entry.IsCredit
+									? (entry.Kind is AgencyFinanceKind.Pending or AgencyFinanceKind.Failed ? "agency-finance__amount--muted" : "agency-finance__amount--credit")
+									: "agency-finance__amount--debit";
+								var sign = entry.IsCredit ? "+" : "−";
+								<tr data-finance-kind="@kindKey">
+									<td>
+										<time datetime="@entry.At.ToString("yyyy-MM-ddTHH:mm:ss")">
+											<bdi dir="ltr">@($"{pdate.Year}/{pdate.Month:00}/{pdate.Day:00}")، @entry.At.ToString("HH:mm")</bdi>
+										</time>
+									</td>
+									<td class="agency-finance__desc">
+										<span class="agency-finance__title">@entry.Title</span>
+										@if (!string.IsNullOrWhiteSpace(entry.Detail))
+										{
+											<small class="agency-finance__detail">@entry.Detail</small>
+										}
+									</td>
+									<td>
+										@if (!string.IsNullOrWhiteSpace(entry.Reference))
+										{
+											<code class="agency-finance__ref" dir="ltr">@entry.Reference</code>
+										}
+										else
+										{
+											<span class="text-muted">—</span>
+										}
+									</td>
+									<td>
+										@switch (entry.Kind)
+										{
+											case AgencyFinanceKind.Charge:
+												<span class="badge bg-label-success">@entry.StatusLabel</span>
+												break;
+											case AgencyFinanceKind.Spend when entry.StatusLabel == "لغو شده":
+												<span class="badge bg-label-secondary">@entry.StatusLabel</span>
+												break;
+											case AgencyFinanceKind.Spend:
+												<span class="badge bg-label-warning">@entry.StatusLabel</span>
+												break;
+											case AgencyFinanceKind.Pending:
+												<span class="badge bg-label-info">@entry.StatusLabel</span>
+												break;
+											default:
+												<span class="badge bg-label-danger">@entry.StatusLabel</span>
+												break;
+										}
+									</td>
+									<td class="text-end">
+										<span class="agency-finance__amount @amountClass" dir="ltr">
+											@sign @entry.AmountToman.ToString("N0")
+										</span>
+									</td>
+								</tr>
+							}
+							<tr class="agency-finance__empty-row d-none" data-finance-empty="1">
+								<td colspan="5">
+									<div class="agency-finance__empty">
+										<p class="mb-1 fw-medium">موردی در این فیلتر نیست</p>
+										<small class="text-muted">فیلتر دیگری را انتخاب کنید.</small>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
@@ -213,17 +348,18 @@
 							id="amount"
 							name="amount"
 							inputmode="numeric"
-							placeholder="2,000,000"
+							placeholder="5,000,000"
 							type="text"
 							aria-describedby="amountHelp" />
 						<span class="agency-charge-modal__amount-unit">تومان</span>
 					</div>
 					<div class="agency-charge-modal__presets" role="group" aria-label="مبالغ پیشنهادی">
-						<button type="button" class="agency-charge-modal__preset" data-amount="2000000">۲ میلیون</button>
 						<button type="button" class="agency-charge-modal__preset" data-amount="5000000">۵ میلیون</button>
 						<button type="button" class="agency-charge-modal__preset" data-amount="10000000">۱۰ میلیون</button>
 						<button type="button" class="agency-charge-modal__preset" data-amount="20000000">۲۰ میلیون</button>
 						<button type="button" class="agency-charge-modal__preset" data-amount="50000000">۵۰ میلیون</button>
+						<button type="button" class="agency-charge-modal__preset" data-amount="75000000">۷۵ میلیون</button>
+						<button type="button" class="agency-charge-modal__preset" data-amount="100000000">۱۰۰ میلیون</button>
 					</div>
 					<small id="amountHelp" class="text-muted d-block mt-2">حداقل مبلغ شارژ ۱٬۰۰۰ تومان است.</small>
 
@@ -370,6 +506,31 @@
 			} else if (window.location.hash === '#financial' || window.location.hash === '#profile') {
 				var target = document.querySelector(window.location.hash);
 				if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+
+			var financeFilters = document.querySelectorAll('.agency-finance__filter');
+			if (financeFilters.length) {
+				financeFilters.forEach(function (btn) {
+					btn.addEventListener('click', function () {
+						var filter = btn.getAttribute('data-finance-filter') || 'all';
+						financeFilters.forEach(function (el) {
+							var on = el === btn;
+							el.classList.toggle('is-active', on);
+							el.setAttribute('aria-selected', on ? 'true' : 'false');
+						});
+
+						var visible = 0;
+						document.querySelectorAll('#agencyFinanceTable tbody tr[data-finance-kind]').forEach(function (row) {
+							var kind = row.getAttribute('data-finance-kind');
+							var show = filter === 'all' || kind === filter;
+							row.classList.toggle('d-none', !show);
+							if (show) visible += 1;
+						});
+
+						var emptyRow = document.querySelector('#agencyFinanceTable tbody tr[data-finance-empty]');
+						if (emptyRow) emptyRow.classList.toggle('d-none', visible > 0);
+					});
+				});
 			}
 		});
 

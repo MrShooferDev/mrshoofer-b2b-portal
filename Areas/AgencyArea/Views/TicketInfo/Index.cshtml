@@ -18,6 +18,9 @@
 	var legalProfileUrl = ViewBag.legalProfileUrl as string ?? Url.Action("LegalProfile", "Agency");
 	var showNeedLegalSwal = isOrganization && !hasInvoiceFinancialInfo;
 	var pageSize = ViewBag.pageSize != null ? Convert.ToInt32(ViewBag.pageSize) : 20;
+	var openInvoiceModal = ViewBag.openInvoiceModal != null && Convert.ToBoolean(ViewBag.openInvoiceModal);
+	var preselectTicketCode = ViewBag.preselectTicketCode as string;
+	var canOpenInvoice = !isOrganization || hasInvoiceFinancialInfo;
 }
 
 @section VendorStyles {
@@ -31,6 +34,7 @@
 @section PageStyles {
 	<link rel="stylesheet" href="~/css/fluent-color-icons.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/ticket-orders.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/official-invoice-modal.css" asp-append-version="true" />
 }
 
 @section VendorScripts {
@@ -48,6 +52,7 @@
 @section PageScripts {
 	<script src="~/js/forms-pickers-jalali.js" asp-append-version="true"></script>
 	<script src="~/js/ui-modals.js"></script>
+	<script src="~/js/official-invoice-modal.js" asp-append-version="true"></script>
 }
 
 <div class="ticket-orders" dir="rtl">
@@ -56,10 +61,26 @@
 			<span class="text-muted fw-light">خریدها /</span>
 			لیست بلیط‌ها
 		</h4>
-		<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ticketFilterModal">
-			<iconify-icon class="fc-icon me-1" icon="fluent-color:calendar-data-bar-24" width="18" height="18" aria-hidden="true"></iconify-icon>
-			فیلتر تاریخ
-		</button>
+		<div class="d-flex flex-wrap gap-2">
+			@if (canOpenInvoice)
+			{
+				<button type="button" class="btn btn-primary" data-open-invoice-modal>
+					<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="18" height="18" aria-hidden="true"></iconify-icon>
+					صدور فاکتور رسمی
+				</button>
+			}
+			else if (isOrganization)
+			{
+				<a href="@legalProfileUrl" class="btn btn-warning js-invoice-need-legal">
+					<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="18" height="18" aria-hidden="true"></iconify-icon>
+					صدور فاکتور رسمی
+				</a>
+			}
+			<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ticketFilterModal">
+				<iconify-icon class="fc-icon me-1" icon="fluent-color:calendar-data-bar-24" width="18" height="18" aria-hidden="true"></iconify-icon>
+				فیلتر تاریخ
+			</button>
+		</div>
 	</div>
 
 	@if (!string.IsNullOrEmpty(dateFilter))
@@ -151,17 +172,28 @@
 					@if (tickets.Count == 0)
 					{
 						<tr>
-							<td colspan="9" class="text-center py-5 text-wrap">
+							<td colspan="9" class="text-center text-wrap">
 								@if (!string.IsNullOrEmpty(dateFilter))
 								{
-									<p class="mb-1 fw-medium">بلیطی پیدا نشد</p>
-									<small class="text-muted">در بازه انتخاب‌شده بلیطی ثبت نشده است.</small>
+									<div class="ticket-orders__empty">
+										<span class="ticket-orders__empty-icon" aria-hidden="true">
+											<iconify-icon icon="fluent-color:search-24" width="36" height="36"></iconify-icon>
+										</span>
+										<p class="mb-1 fw-medium">بلیطی در این بازه پیدا نشد</p>
+										<small class="text-muted d-block mb-3">بازه تاریخ را تغییر دهید یا فیلتر را پاک کنید.</small>
+										<a class="btn btn-sm btn-outline-secondary" asp-action="Index">پاک کردن فیلتر</a>
+									</div>
 								}
 								else
 								{
-									<p class="mb-1 fw-medium">هنوز بلیطی وجود ندارد</p>
-									<small class="text-muted d-block mb-3">می‌توانید از صفحه اصلی سفر جستجو کنید.</small>
-									<a class="btn btn-primary" asp-area="AgencyArea" asp-controller="Home" asp-action="Index">جستجوی سفرها</a>
+									<div class="ticket-orders__empty">
+										<span class="ticket-orders__empty-icon" aria-hidden="true">
+											<iconify-icon icon="fluent-color:receipt-24" width="36" height="36"></iconify-icon>
+										</span>
+										<p class="mb-1 fw-medium">هنوز بلیطی خریداری نشده</p>
+										<small class="text-muted d-block mb-3">با جستجوی سفر، اولین بلیط را صادر کنید.</small>
+										<a class="btn btn-primary" asp-area="AgencyArea" asp-controller="Home" asp-action="Index">جستجوی سفرها</a>
+									</div>
 								}
 							</td>
 						</tr>
@@ -217,38 +249,19 @@
 											</a>
 											@if (!ticket.IsCancelled)
 											{
-												if (isOrganization)
+												if (canOpenInvoice)
 												{
-													if (hasInvoiceFinancialInfo)
-													{
-														<a class="dropdown-item"
-														   target="_blank"
-														   rel="noopener"
-														   asp-area="AgencyArea"
-														   asp-controller="OfficialInvoices"
-														   asp-action="Create"
-														   asp-route-ticketcode="@ticket.TicketCode">
-															<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="16" height="16" aria-hidden="true"></iconify-icon>
-															فاکتور رسمی
-														</a>
-													}
-													else
-													{
-														<a href="@legalProfileUrl" class="dropdown-item js-invoice-need-legal">
-															<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="16" height="16" aria-hidden="true"></iconify-icon>
-															فاکتور رسمی
-														</a>
-													}
+													<a href="#"
+													   class="dropdown-item"
+													   data-open-invoice-modal
+													   data-ticket-code="@ticket.TicketCode">
+														<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="16" height="16" aria-hidden="true"></iconify-icon>
+														فاکتور رسمی
+													</a>
 												}
 												else
 												{
-													<a class="dropdown-item"
-													   target="_blank"
-													   rel="noopener"
-													   asp-area="AgencyArea"
-													   asp-controller="OfficialInvoices"
-													   asp-action="Create"
-													   asp-route-ticketcode="@ticket.TicketCode">
+													<a href="@legalProfileUrl" class="dropdown-item js-invoice-need-legal">
 														<iconify-icon class="fc-icon me-1" icon="fluent-color:document-text-24" width="16" height="16" aria-hidden="true"></iconify-icon>
 														فاکتور رسمی
 													</a>
@@ -334,6 +347,14 @@
 		</div>
 	</div>
 </div>
+
+@if (canOpenInvoice)
+{
+	ViewBag.InvoiceModalIsOrganization = isOrganization;
+	ViewBag.InvoiceModalPreselect = preselectTicketCode;
+	ViewBag.InvoiceModalAutoOpen = openInvoiceModal;
+	@await Html.PartialAsync("_OfficialInvoiceModal")
+}
 
 @if (showNeedLegalSwal)
 {

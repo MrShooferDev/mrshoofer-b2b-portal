@@ -30,6 +30,52 @@ namespace Application.Services
     }
 
     /// <summary>
+    /// Sends a one-time verification code via sms.ir.
+    /// Prefers a configured verify template (<c>smsirOtpTemplateId</c>); otherwise uses bulk SMS.
+    /// </summary>
+    public async Task SendOtpCodeAsync(string numberphone, string code)
+    {
+      if (string.IsNullOrWhiteSpace(numberphone))
+        throw new ArgumentException("Phone number is required.", nameof(numberphone));
+      if (string.IsNullOrWhiteSpace(code))
+        throw new ArgumentException("OTP code is required.", nameof(code));
+
+      var phone = numberphone.Trim();
+      var otp = code.Trim();
+
+      var templateRaw = _configuration["smsirOtpTemplateId"];
+      if (!string.IsNullOrWhiteSpace(templateRaw) && int.TryParse(templateRaw, out var templateId) && templateId > 0)
+      {
+        var paramName = string.IsNullOrWhiteSpace(_configuration["smsirOtpParameterName"])
+          ? "CODE"
+          : _configuration["smsirOtpParameterName"]!.Trim();
+
+        var response = await smsIr.VerifySendAsync(
+          phone,
+          templateId,
+          new[] { new VerifySendParameter(paramName, otp) });
+
+        if (response?.Status != 1)
+        {
+          throw new InvalidOperationException(
+            $"sms.ir OTP verify-send failed. Status={response?.Status}, Message={response?.Message}");
+        }
+
+        return;
+      }
+
+      var text = $"کد تأیید مسترشوفر: {otp}\nاین کد تا ۹۰ ثانیه معتبر است.";
+      var lineNumber = await ResolveLineNumberAsync();
+      var bulk = await smsIr.BulkSendAsync(lineNumber, text, new[] { phone });
+
+      if (bulk?.Status != 1)
+      {
+        throw new InvalidOperationException(
+          $"sms.ir OTP bulk-send failed. Status={bulk?.Status}, Message={bulk?.Message}");
+      }
+    }
+
+    /// <summary>
     /// Notifies the admin phone that a new contact-us message landed in Admin / پیام‌ها.
     /// </summary>
     public async Task NotifyAdminNewContactMessageAsync(string? name, string number, string message)

@@ -21,6 +21,18 @@
   max-height: 380px !important;
   overflow-y: auto !important;
   overflow-x: visible !important;
+  /* Stay above following landing sections (features title, etc.) */
+  z-index: 1080 !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.dropdown-menu.origin_location .city-picker,
+.dropdown-menu.destination_location .city-picker,
+.dropdown-menu.origin_location.show .city-picker,
+.dropdown-menu.destination_location.show .city-picker {
+  transition: none !important;
+  animation: none !important;
 }
 
 /* Custom scrollbar styling for better UX */
@@ -356,6 +368,8 @@
   --hero-ground: #ffffff;
   padding-top: 0 !important;
   padding-bottom: 1.5rem !important;
+  position: relative;
+  z-index: 3;
   isolation: isolate;
   overflow: visible;
   background: linear-gradient(180deg, #ffffff 0%, #f3f3f3 100%) !important;
@@ -1524,59 +1538,138 @@ html[dir="rtl"] .landing-hero .hero-seg-badge {
 
 
 
+/*
+  front-page.css sets .section-title { z-index: 1 } so the underline ::after can sit
+  behind the text. Because .landing-hero uses isolation:isolate, that z-index:1 on a
+  later section paints over the open origin/destination dropdown. Keep the underline
+  local with isolation, and do not elevate the title above the hero search UI.
+*/
+.section-title {
+  z-index: auto;
+  isolation: isolate;
+}
+
+#landingFeatures,
+.landing-features {
+  --lf-gap: 1.25rem;
+  --lf-ink: var(--brand-ink, #111);
+  --lf-muted: var(--brand-muted, #52525b);
+  --lf-well: #f4f4f5;
+  --lf-well-ring: rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
+}
+
+.landing-features__intro {
+  max-width: 40rem;
+  margin: 0 auto 2.25rem;
+  text-align: center;
+}
+
+.landing-features__badge {
+  display: inline-flex;
+  margin-bottom: 0.85rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.landing-features__title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--lf-ink);
+}
+
+.landing-features__lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  letter-spacing: 0;
+  color: var(--lf-muted);
+  text-wrap: pretty;
+}
+
 .landing-features .features-icon-wrapper {
   --bs-gutter-x: 1.5rem;
   --bs-gutter-y: 1.5rem;
+  align-items: stretch;
 }
 
-.features-icon-description {
-  line-height: 1.8;
+.landing-features .features-icon-box {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.35rem 0.5rem 0.15rem;
+}
+
+.landing-features .features-icon-box__media {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 0 0.9rem;
+  border-radius: 1.15rem;
+  background: var(--lf-well);
+  box-shadow: inset 0 0 0 1px var(--lf-well-ring);
+}
+
+.landing-features .feature-fluent-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  line-height: 0;
+}
+
+.landing-features .features-icon-box__title {
+  margin: 0 0 0.45rem;
+  max-width: 16rem;
+  font-size: 1.015rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  color: var(--lf-ink);
+}
+
+.landing-features .features-icon-description {
+  margin: 0;
+  max-width: 17.5rem;
+  font-size: 0.875rem;
+  line-height: 1.75;
   letter-spacing: 0;
-  max-width: 22rem;
-  margin-inline: auto;
+  color: var(--lf-muted);
+  text-wrap: pretty;
 }
 
-.landing-features .feature-line-icon {
-  display: inline-block;
-  width: 64px;
-  height: 64px;
-  background-color: var(--feature-icon-tint, #111);
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
+@media (min-width: 992px) {
+  .landing-features__intro {
+    margin-bottom: 2.75rem;
+  }
+
+  .landing-features .features-icon-box {
+    padding-inline: 0.75rem;
+  }
+
+  .landing-features .features-icon-box__media {
+    width: 4.75rem;
+    height: 4.75rem;
+    margin-bottom: 1rem;
+  }
 }
 
-.landing-features .feature-line-icon--ink {
-  --feature-icon-tint: #111111;
-  -webkit-mask-image: url("/img/front-pages/icons/laptop.png");
-  mask-image: url("/img/front-pages/icons/laptop.png");
-}
+@media (max-width: 575.98px) {
+  .landing-features__intro {
+    margin-bottom: 1.75rem;
+  }
 
-.landing-features .feature-line-icon--paper {
-  --feature-icon-tint: #3f3f46;
-  -webkit-mask-image: url("/img/front-pages/icons/paper.png");
-  mask-image: url("/img/front-pages/icons/paper.png");
-}
-
-.landing-features .feature-line-icon--check {
-  --feature-icon-tint: #18181b;
-  -webkit-mask-image: url("/img/front-pages/icons/check.png");
-  mask-image: url("/img/front-pages/icons/check.png");
-}
-
-.landing-features .feature-line-icon--user {
-  --feature-icon-tint: #52525b;
-  -webkit-mask-image: url("/img/front-pages/icons/user.png");
-  mask-image: url("/img/front-pages/icons/user.png");
-}
-
-.landing-features .feature-line-icon--keys {
-  --feature-icon-tint: #27272a;
-  -webkit-mask-image: url("/img/front-pages/icons/keyboard.png");
-  mask-image: url("/img/front-pages/icons/keyboard.png");
+  .landing-features .features-icon-box {
+    padding-block: 0.15rem 0.35rem;
+  }
 }
 
 /* Hero search trust check — force ink (Tabler filled icon) */

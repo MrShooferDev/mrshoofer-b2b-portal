@@ -4,7 +4,8 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 :root,
-[data-bs-theme="light"] {
+[data-bs-theme="light"],
+html.light-style {
   /* Legacy brand aliases (used across front-palette + page CSS) */
   --brand-ink: #000000;
   --brand-ink-rgb: 0, 0, 0;
@@ -17,24 +18,29 @@
   --brand-focus: var(--ring);
   --box-shadow-lift: var(--shadow-lg);
 
-  /* Bootstrap 5 variable bridge */
-  --bs-primary: #000000;
-  --bs-primary-rgb: 0, 0, 0;
-  --bs-primary-text-emphasis: var(--primary);
-  --bs-primary-bg-subtle: var(--muted);
-  --bs-primary-border-subtle: var(--border);
-  --bs-secondary: var(--secondary);
-  --bs-secondary-color: var(--muted-foreground);
-  --bs-body-bg: var(--background);
-  --bs-body-color: var(--foreground);
-  --bs-heading-color: var(--foreground);
-  --bs-border-color: var(--border);
+  /*
+    Bootstrap bridge — !important beats Vuexy theme-default / TemplateCustomizer
+    re-injection of Sneat purple-gray body/heading tokens.
+  */
+  --bs-primary: #000000 !important;
+  --bs-primary-rgb: 0, 0, 0 !important;
+  --bs-primary-text-emphasis: var(--foreground) !important;
+  --bs-primary-bg-subtle: var(--muted) !important;
+  --bs-primary-border-subtle: var(--border) !important;
+  --bs-secondary: var(--secondary) !important;
+  --bs-secondary-color: var(--muted-foreground) !important;
+  --bs-secondary-bg: var(--muted) !important;
+  --bs-tertiary-bg: var(--muted) !important;
+  --bs-body-bg: var(--background) !important;
+  --bs-body-color: var(--foreground) !important;
+  --bs-heading-color: var(--foreground) !important;
+  --bs-border-color: var(--border) !important;
   --bs-border-radius: var(--radius-md);
   --bs-border-radius-sm: var(--radius-sm);
   --bs-border-radius-lg: var(--radius-lg);
   --bs-border-radius-xl: var(--radius-xl);
-  --bs-link-color: var(--foreground);
-  --bs-link-hover-color: var(--muted-foreground);
+  --bs-link-color: var(--foreground) !important;
+  --bs-link-hover-color: var(--muted-foreground) !important;
   --bs-focus-ring-color: color-mix(in oklch, var(--ring) 40%, transparent);
   --bs-danger: var(--destructive);
 }

@@ -8,17 +8,21 @@ namespace Application.Models
         /// <summary>درحال صدور — not yet uploaded to Moodian.</summary>
         Pending = 0,
         /// <summary>ثبت شده در سامانه مودیان — uploaded/signed on the government site.</summary>
-        Uploaded = 1
+        Uploaded = 1,
+        /// <summary>درخواست فاکتور توسط آژانس لغو شد — tickets become free again.</summary>
+        Cancelled = 2
     }
 
     public static class OfficialInvoiceUploadStatusText
     {
         public const string Pending = "درحال صدور";
         public const string Uploaded = "ثبت شده در سامانه مودیان";
+        public const string Cancelled = "لغو شده";
 
         public static string ToPersian(OfficialInvoiceUploadStatus status) => status switch
         {
             OfficialInvoiceUploadStatus.Uploaded => Uploaded,
+            OfficialInvoiceUploadStatus.Cancelled => Cancelled,
             _ => Pending
         };
     }
@@ -44,6 +48,8 @@ namespace Application.Models
 
         [MaxLength(32)]
         public string? TicketCode { get; set; }
+
+        public ICollection<OfficialInvoiceTicket> InvoiceTickets { get; set; } = new List<OfficialInvoiceTicket>();
 
         [MaxLength(200)]
         public string? BuyerName { get; set; }

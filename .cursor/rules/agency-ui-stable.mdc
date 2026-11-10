@@ -1,0 +1,48 @@
+---
+description: Stable Agency UI/UX and Persian-copy preferences for portal work
+alwaysApply: true
+---
+
+# Agency UI — stable preferences
+
+Apply these on every Agency UI / modal / table change unless the user overrides them.
+
+## Copy & language
+
+- Persian UI copy matters: prefer **exact wording** the user provides; do not “improve” marketing tone.
+- Prefer short, actionable labels over explanatory chrome.
+- Subtitles should explain **what to do**, not dump counts/stats unless asked.
+- Avoid redundant status labels (e.g. don’t show a “already done / travelled” chip if absence is enough).
+
+## Information hierarchy (lists & rows)
+
+- Trip/ticket rows: **passenger full name first**, **route/direction second** (most important).
+- Demote codes, national IDs, service names, and dates to secondary meta.
+- Sort **actionable/selectable items before blocked/unselectable** ones.
+- For cancelled / dead records: **hide action menus** entirely (not just disable items).
+
+## Controls & chrome
+
+- Remove filters/buttons that don’t change a real decision (keep period/search if useful).
+- Search fields: include a proper search icon; keep placeholder text readable (no overlap).
+- Clear/reset selection: icon button (prefer dismiss/cross), outline-danger idle → **filled danger when there is something to clear**.
+- Destructive actions (cancel/delete/revoke): always confirm with a **minimal SweetAlert** before submit; never fire immediately on click.
+- After a successful create/issue flow: **navigate to the result** — no celebratory success popup unless asked.
+
+## Empty & loading states
+
+- Empty states: compact spacing, vertically tight under toolbar; **no decorative icon** unless the user asks.
+- Empty CTAs: one primary action only (e.g. reset filters / go buy); drop secondary “clear search” if redundant.
+- Loading states may keep a modest min-height; empty states should not look like a tall hollow box.
+
+## Visual system
+
+- Stay inside the existing Agency stack (Bootstrap + Fluent/Iconify color icons where already used).
+- Prefer outline variants for idle secondary actions; filled only for active/affirmative/destructive-ready states.
+- Badges: only when they add signal (e.g. “جدید” for very recent). Use a clear red pill for “جدید” when that rule applies.
+- Don’t invent purple/glow AI aesthetics; match the current portal look.
+
+## Prompt efficiency (when user sends UI polish)
+
+- If several adjacent tweaks target the same surface, implement them as **one pass** and verify once.
+- Prefer end-state acceptance (“cancelled rows have no عملیات”) over DOM-path dumps unless location is ambiguous.

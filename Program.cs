@@ -1,6 +1,7 @@
 using Application.Data;
 using Application.Services;
 using Application.Services.Auth;
+using Application.Services.Dev;
 using Application.Services.MrShooferORS;
 using Application.Services.Payment;
 using Kavenegar;
@@ -53,7 +54,9 @@ builder.Services
   });
 
 
-builder.Services.TryAddTransient<IOtpLogin, KavehNeagerOtp>();
+// OTP uses sms.ir (CustomerServiceSmsSender), same account as ticket and admin SMS.
+// Kavenegar (KavehNeagerOtp) is not delivering.
+builder.Services.AddTransient<IOtpLogin, SmsIrOtpLogin>();
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -273,6 +276,16 @@ using (var scope = app.Services.CreateScope())
         throw new Exception($"Failed to assign Admin claim to '{adminUsername}'.");
       }
     }
+
+    if (app.Environment.IsDevelopment())
+    {
+      await DevelopmentBootstrap.SeedAsync(
+        db,
+        userManager,
+        roleManager,
+        app.Configuration,
+        logger);
+    }
   }
   catch (Exception ex) when (app.Environment.IsDevelopment())
   {
@@ -309,6 +322,67 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 
 app.UseAuthentication();
+
+if (app.Environment.IsDevelopment())
+{
+  app.Use(async (context, next) =>
+  {
+    var config = context.RequestServices.GetRequiredService<IConfiguration>();
+    var enabled = config.GetValue("DevAuth:Enabled", true);
+    var autoLogin = config.GetValue("DevAuth:AutoLogin", true);
+    if (!enabled || !autoLogin)
+    {
+      await next();
+      return;
+    }
+
+    var path = context.Request.Path;
+    // Never redirect JSON/search APIs — a 302 breaks jQuery getJSON / fetch clients.
+    var skip =
+      context.User?.Identity?.IsAuthenticated == true ||
+      context.Request.Cookies.ContainsKey(DevelopmentBootstrap.SkipAutoLoginCookie) ||
+      path.StartsWithSegments("/Admin", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/Auth/Login", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/Auth/Logout", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/Auth/Loginotp", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/CreateAccount", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/Error", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/TaxiTrips/SearchJson", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/TaxiTrips/AvailableDirections", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/TaxiTrips/SupportedCities", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/TaxiTrips/SearchHints", StringComparison.OrdinalIgnoreCase) ||
+      path.StartsWithSegments("/TaxiTrips/RouteSeoPartial", StringComparison.OrdinalIgnoreCase);
+
+    if (skip)
+    {
+      await next();
+      return;
+    }
+
+    // Only auto-sign on safe navigations so POST bodies are not dropped by a redirect.
+    if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+    {
+      await next();
+      return;
+    }
+
+    using var scope = context.RequestServices.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<IdentityUser>>();
+    var username = (config["DevAuth:Username"] ?? DevelopmentBootstrap.DefaultUsername).Trim();
+    var user = await userManager.FindByNameAsync(username);
+    if (user == null)
+    {
+      await next();
+      return;
+    }
+
+    await signInManager.SignInAsync(user, isPersistent: true);
+    var redirect = $"{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}";
+    context.Response.Redirect(string.IsNullOrEmpty(redirect) ? "/" : redirect);
+  });
+}
+
 app.UseAuthorization();
 
 app.Use(async (context, next) =>

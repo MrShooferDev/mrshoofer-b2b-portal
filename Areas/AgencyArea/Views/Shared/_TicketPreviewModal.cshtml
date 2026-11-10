@@ -1,0 +1,82 @@
+@* Reusable upcoming/ticket preview modal — open via data-open-ticket-preview or window.MrShooferTicketPreview.open(...) *@
+<div class="modal fade ticket-preview-modal"
+	 id="ticketPreviewModal"
+	 tabindex="-1"
+	 aria-labelledby="ticketPreviewModalTitle"
+	 aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="ticket-preview-modal__heading">
+					<span class="ticket-preview-modal__header-icon" aria-hidden="true">
+						<img class="ticket-preview-modal__taxi-icon" src="~/taxi.png" width="28" height="28" alt="" />
+					</span>
+					<div>
+						<h5 class="modal-title mb-0" id="ticketPreviewModalTitle">جزئیات سفر</h5>
+						<small id="ticketPreviewModalHint">مرور سریع اطلاعات سفر پیش‌رو</small>
+					</div>
+				</div>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+			</div>
+			<div class="modal-body">
+				<div class="ticket-preview-modal__identity-top">
+					<div class="ticket-preview-modal__passenger" id="ticketPreviewPassenger">—</div>
+					<span class="ticket-preview-modal__status" id="ticketPreviewStatus" hidden></span>
+				</div>
+
+				<div class="ticket-preview-modal__route-strip" aria-label="مسیر و زمان سفر">
+					<div class="ticket-preview-modal__endpoint">
+						<span class="ticket-preview-modal__endpoint-label">مبدا</span>
+						<strong class="ticket-preview-modal__endpoint-value" id="ticketPreviewOrigin">—</strong>
+						<span class="ticket-preview-modal__endpoint-when" id="ticketPreviewTime">—</span>
+					</div>
+					<span class="ticket-preview-modal__route-arrow" aria-hidden="true">
+						<iconify-icon class="fc-icon" icon="fluent:arrow-left-24-regular" width="18" height="18"></iconify-icon>
+					</span>
+					<div class="ticket-preview-modal__endpoint ticket-preview-modal__endpoint--dest">
+						<span class="ticket-preview-modal__endpoint-label">مقصد</span>
+						<strong class="ticket-preview-modal__endpoint-value" id="ticketPreviewDestination">—</strong>
+						<span class="ticket-preview-modal__endpoint-when" id="ticketPreviewDate">—</span>
+					</div>
+				</div>
+
+				<div class="ticket-preview-modal__progress d-none" id="ticketPreviewProgressWrap">
+					<div class="ticket-preview-modal__progress-label">
+						<span>پیشرفت سفر</span>
+						<strong id="ticketPreviewProgressPct" dir="ltr">0%</strong>
+					</div>
+					<div class="ticket-preview-modal__progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="ticketPreviewProgressBar">
+						<span class="ticket-preview-modal__progress-fill" id="ticketPreviewProgressFill"></span>
+					</div>
+					<small class="ticket-preview-modal__progress-eta text-muted d-none" id="ticketPreviewProgressEta"></small>
+				</div>
+
+				<dl class="ticket-preview-modal__facts" id="ticketPreviewFacts">
+					<div class="ticket-preview-modal__fact">
+						<dt>خودرو</dt>
+						<dd id="ticketPreviewCar">—</dd>
+					</div>
+					<div class="ticket-preview-modal__fact">
+						<dt>سرویس</dt>
+						<dd id="ticketPreviewService">—</dd>
+					</div>
+					<div class="ticket-preview-modal__fact">
+						<dt>کد بلیط</dt>
+						<dd id="ticketPreviewCode" dir="ltr">—</dd>
+					</div>
+					<div class="ticket-preview-modal__fact d-none" id="ticketPreviewPhoneFact">
+						<dt>تماس</dt>
+						<dd id="ticketPreviewPhone" dir="ltr">—</dd>
+					</div>
+					<div class="ticket-preview-modal__fact ticket-preview-modal__fact--amount d-none" id="ticketPreviewAmountFact">
+						<dt>مبلغ</dt>
+						<dd id="ticketPreviewAmount">—</dd>
+					</div>
+				</dl>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">بستن</button>
+			</div>
+		</div>
+	</div>
+</div>

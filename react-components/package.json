@@ -8,7 +8,8 @@
     "watch:css": "./node_modules/.bin/tailwindcss -i ./heroui.css -o ../wwwroot/js/react/heroui.css --watch",
     "watch": "esbuild create-account.tsx --bundle --sourcemap --format=iife --target=es2020 --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\" --outfile=../wwwroot/js/react/create-account.js --watch",
     "build:ui": "npm --prefix ui run build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:registration": "node registration/engine/run-payload-checks.mjs"
   },
   "dependencies": {
     "@heroui/react": "^3.2.6",

@@ -62,15 +62,45 @@ namespace Application.Areas.AgencyArea
       return str;
     }
 
+    private void AssignSearchViewBag(string? originstring, string? destinationstring, string? searchdate, PersianDate? pd = null)
+    {
+      ViewBag.origin_city_text = originstring;
+      ViewBag.dest_city_text = destinationstring;
+
+      if (pd != null)
+      {
+        ViewBag.searchpdate = pd;
+        ViewBag.selecteddate = pd.ToDateTime();
+        ViewBag.searchdate = string.IsNullOrWhiteSpace(searchdate) ? pd.ToShortDateString() : searchdate;
+        return;
+      }
+
+      PersianDate fallback;
+      try
+      {
+        fallback = string.IsNullOrWhiteSpace(searchdate)
+          ? DateTime.Now.ToPersianDate()
+          : new PersianDate(searchdate.Replace('-', '/'));
+      }
+      catch
+      {
+        fallback = DateTime.Now.ToPersianDate();
+      }
+
+      ViewBag.searchpdate = fallback;
+      ViewBag.selecteddate = fallback.ToDateTime();
+      ViewBag.searchdate = string.IsNullOrWhiteSpace(searchdate)
+        ? fallback.ToShortDateString()
+        : searchdate;
+    }
+
     [AllowAnonymous]
     public async Task<IActionResult> Index(string originstring, string destinationstring, string searchdate)
     {
       if (string.IsNullOrWhiteSpace(originstring) || string.IsNullOrWhiteSpace(destinationstring))
       {
         ModelState.AddModelError(string.Empty, "لطفا شهر مبدا و مقصد را وارد کنید.");
-        ViewBag.origin_city_text = originstring;
-        ViewBag.dest_city_text = destinationstring;
-        ViewBag.searchdate = searchdate;
+        AssignSearchViewBag(originstring, destinationstring, searchdate);
         return View();
       }
 
@@ -128,9 +158,7 @@ namespace Application.Areas.AgencyArea
       {
         if (origin_id == 0) ModelState.AddModelError(nameof(originstring), $"شهر مبدا نامعتبر است: {originstring}");
         if (destination_id == 0) ModelState.AddModelError(nameof(destinationstring), $"شهر مقصد نامعتبر است: {destinationstring}");
-        ViewBag.origin_city_text = originstring;
-        ViewBag.dest_city_text = destinationstring;
-        ViewBag.searchdate = searchdate;
+        AssignSearchViewBag(originstring, destinationstring, searchdate);
         return View();
       }
 
@@ -142,20 +170,11 @@ namespace Application.Areas.AgencyArea
       catch
       {
         ModelState.AddModelError(nameof(searchdate), "تاریخ نامعتبر است.");
-        ViewBag.origin_city_text = originstring;
-        ViewBag.dest_city_text = destinationstring;
-        ViewBag.searchdate = searchdate;
+        AssignSearchViewBag(originstring, destinationstring, searchdate);
         return View();
       }
 
-      DateTime searchedDatetime = pd.ToDateTime();
-
-      ViewBag.origin_city_text = originstring;
-      ViewBag.dest_city_text = destinationstring;
-      ViewBag.searchdate = searchdate;
-      ViewBag.selecteddate = searchedDatetime;
-      ViewBag.searchpdate = pd;
-
+      AssignSearchViewBag(originstring, destinationstring, searchdate, pd);
       return View();
     }
 

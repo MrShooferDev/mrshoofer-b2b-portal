@@ -1,0 +1,1337 @@
+{
+  "schemaVersion": "1.1.0",
+  "flowId": "mrshoofer_b2b_registration",
+  "locale": "fa-IR",
+  "direction": "rtl",
+  "title": "ثبت‌نام پنل سازمانی مسترشوفر",
+  "purpose": "ثبت اطلاعات فرد ثبت‌نام‌کننده، نوع فعالیت کسب‌وکار، هویت حقیقی یا حقوقی و نیازهای خدماتی برای ایجاد درخواست پنل B2B.",
+  "principles": {
+    "oneTopicPerStep": true,
+    "showProgress": true,
+    "allowBackNavigation": true,
+    "saveDraftAutomatically": true,
+    "allowResume": true,
+    "showOnlyRelevantFields": true,
+    "doNotAskForUnneededDocuments": true,
+    "phoneVerificationRequiredBeforeSubmission": true,
+    "avoidDuplicateNameQuestions": "نام و نام خانوادگی مرحله تماس برای ثبت‌نام شخص حقیقی استفاده می‌شود؛ در شاخه شخص حقیقی دوباره پرسیده نمی‌شود."
+  },
+  "recommendedActivationPolicy": {
+    "accountCreatedAfter": "phone_verified",
+    "applicationStatusOnSubmit": "submitted",
+    "panelStatusOnSubmit": "pending_approval",
+    "panelAccessGrantedAfter": "application_approved",
+    "note": "این سیاست قابل تنظیم است. اگر فعال‌سازی خودکار انتخاب شود، پس از اعتبارسنجی لازم panelStatus می‌تواند active شود."
+  },
+  "steps": [
+    {
+      "id": "contact",
+      "stepNumber": 1,
+      "title": "نوع پنل و اطلاعات تماس",
+      "description": "ابتدا نوع پنل و دسترسی را انتخاب کنید، سپس اطلاعات مسئول ثبت‌نام را وارد کنید.",
+      "progressLabel": "اطلاعات تماس",
+      "fields": [
+        {
+          "id": "access.panel",
+          "type": "radioCards",
+          "label": "کدام پنل و نوع دسترسی را می‌خواهید؟",
+          "required": true,
+          "layout": "stack",
+          "options": [
+            {
+              "value": "agency",
+              "label": "پنل آژانس",
+              "description": "فروش بلیت و خدمات سفر به مشتریان",
+              "icon": "globe"
+            },
+            {
+              "value": "organization",
+              "label": "پنل سازمان",
+              "description": "رزرو سفر برای کارکنان، مهمانان یا مشتریان مجموعه",
+              "icon": "building-people"
+            }
+          ]
+        },
+        {
+          "id": "contact.firstName",
+          "type": "text",
+          "label": "نام",
+          "placeholder": "نام شما",
+          "required": true,
+          "autocomplete": "given-name",
+          "validation": {
+            "minLength": 2,
+            "maxLength": 60,
+            "trim": true
+          }
+        },
+        {
+          "id": "contact.lastName",
+          "type": "text",
+          "label": "نام خانوادگی",
+          "placeholder": "نام خانوادگی شما",
+          "required": true,
+          "autocomplete": "family-name",
+          "validation": {
+            "minLength": 2,
+            "maxLength": 80,
+            "trim": true
+          }
+        },
+        {
+          "id": "contact.mobile",
+          "type": "phone",
+          "label": "شماره موبایل",
+          "placeholder": "مثلاً ۰۹۱۲۱۲۳۴۵۶۷",
+          "helperText": "برای تأیید شماره و پیگیری وضعیت درخواست استفاده می‌شود.",
+          "required": true,
+          "verification": {
+            "method": "otp_sms",
+            "mustBeVerifiedToContinue": true
+          },
+          "normalization": {
+            "countryCode": "+98",
+            "acceptPersianDigits": true,
+            "storeE164": true
+          },
+          "validation": {
+            "country": "IR",
+            "mobileOnly": true
+          }
+        },
+        {
+          "id": "contact.email",
+          "type": "email",
+          "label": "ایمیل کاری",
+          "placeholder": "name@company.com",
+          "helperText": "برای ارسال مکاتبات مرتبط با پنل.",
+          "required": false,
+          "validation": {
+            "maxLength": 150
+          }
+        }
+      ],
+      "primaryAction": {
+        "label": "تأیید شماره و ادامه",
+        "nextStep": "business_profile"
+      },
+      "backAction": null
+    },
+    {
+      "id": "business_profile",
+      "stepNumber": 2,
+      "title": "درباره فعالیت شما",
+      "description": "نوع فعالیت خود را انتخاب کنید تا سؤال‌های مرتبط با کسب‌وکار شما نمایش داده شود.",
+      "progressLabel": "نوع فعالیت",
+      "fields": [
+        {
+          "id": "business.type",
+          "type": "radioCards",
+          "label": "کدام گزینه فعالیت شما را بهتر توصیف می‌کند؟",
+          "helperText": "یک گزینه انتخاب کنید.",
+          "required": true,
+          "layout": "singleColumnOnMobile_twoColumnsOnDesktop",
+          "visibleWhen": {
+            "equals": {
+              "field": "access.panel",
+              "value": "agency"
+            }
+          },
+          "options": [
+            {
+              "value": "travel_agency",
+              "label": "آژانس مسافرتی",
+              "description": "ارائه خدمات سفر به مشتریان آژانس"
+            },
+            {
+              "value": "online_travel_platform",
+              "label": "پلتفرم یا سامانه فروش آنلاین",
+              "description": "فروش یا رزرو آنلاین خدمات سفر"
+            },
+            {
+              "value": "tour_operator",
+              "label": "مجری یا برگزارکننده تور",
+              "description": "برگزاری تور و تهیه خدمات سفر"
+            },
+            {
+              "value": "tour_seller",
+              "label": "فروشنده تور یا بسته سفر",
+              "description": "عرضه تورها یا بسته‌های سفر به مشتریان"
+            },
+            {
+              "value": "independent_seller",
+              "label": "فروشنده مستقل خدمات سفر",
+              "description": "فعالیت به‌صورت فردی و بدون نام تجاری ثبت‌شده"
+            },
+            {
+              "value": "other",
+              "label": "سایر",
+              "description": "فعالیتی که در گزینه‌های بالا نیست"
+            }
+          ],
+          "ui": {
+            "control": "selectableCards",
+            "singleSelect": true
+          }
+        },
+        {
+          "id": "business.typeOther",
+          "type": "text",
+          "label": "نوع فعالیت شما چیست؟",
+          "placeholder": "نوع فعالیت را توضیح دهید",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "business.type",
+              "value": "other"
+            }
+          },
+          "validation": {
+            "minLength": 2,
+            "maxLength": 100,
+            "trim": true
+          }
+        },
+        {
+          "id": "business.displayName",
+          "type": "text",
+          "label": "نام کسب‌وکار",
+          "placeholder": "نام کسب‌وکار را وارد کنید",
+          "helperText": "نامی که با آن خدماتتان را ارائه می‌دهید",
+          "requiredWhen": {
+            "notEquals": {
+              "field": "business.type",
+              "value": "independent_seller"
+            }
+          },
+          "required": false,
+          "labelByBusinessType": {
+            "travel_agency": "نام آژانس مسافرتی",
+            "organization": "نام شرکت یا سازمان",
+            "online_travel_platform": "نام پلتفرم یا سامانه فروش",
+            "tour_operator": "نام مجموعه برگزارکننده تور",
+            "tour_seller": "نام کسب‌وکار فروش تور یا بسته سفر",
+            "independent_seller": "عنوان فعالیت یا کسب‌وکار شما",
+            "other": "نام مجموعه یا کسب‌وکار"
+          },
+          "placeholderByBusinessType": {
+            "travel_agency": "نام آژانس را وارد کنید",
+            "organization": "نام شرکت یا سازمان را وارد کنید",
+            "online_travel_platform": "نام پلتفرم را وارد کنید",
+            "tour_operator": "نام مجموعه را وارد کنید",
+            "tour_seller": "نام کسب‌وکار را وارد کنید",
+            "independent_seller": "در صورت داشتن نام کسب‌وکار وارد کنید",
+            "other": "نام مجموعه یا کسب‌وکار را وارد کنید"
+          },
+          "validation": {
+            "minLength": 2,
+            "maxLength": 150,
+            "trim": true
+          }
+        },
+        {
+          "id": "business.hasWebsite",
+          "type": "radioCards",
+          "label": "وب‌سایت یا صفحه معرفی دارید؟",
+          "required": true,
+          "layout": "stack",
+          "options": [
+            {
+              "value": "yes",
+              "label": "بله، دارم",
+              "description": "در صورت تمایل آدرس را وارد می‌کنید"
+            },
+            {
+              "value": "no",
+              "label": "وبسایت ندارم",
+              "description": "بدون وب‌سایت یا صفحه معرفی ادامه می‌دهید"
+            }
+          ]
+        },
+        {
+          "id": "business.websiteOrSocial",
+          "type": "urlOrText",
+          "label": "آدرس وب‌سایت یا صفحه معرفی",
+          "placeholder": "مثلاً example.com یا @yourpage",
+          "required": false,
+          "visibleWhen": {
+            "equals": {
+              "field": "business.hasWebsite",
+              "value": "yes"
+            }
+          },
+          "validation": {
+            "maxLength": 250,
+            "allowUrlOrHandle": true,
+            "trim": true
+          }
+        }
+      ],
+      "primaryAction": {
+        "label": "ادامه",
+        "nextStep": "identity"
+      },
+      "backAction": {
+        "label": "بازگشت",
+        "previousStep": "contact"
+      }
+    },
+    {
+      "id": "identity",
+      "stepNumber": 3,
+      "title": "اطلاعات هویتی و ثبتی",
+      "description": "مشخص کنید ثبت‌نام به نام یک فرد انجام می‌شود یا یک شخصیت حقوقی.",
+      "progressLabel": "اطلاعات هویتی",
+      "fields": [
+        {
+          "id": "identity.legalForm",
+          "type": "radioCards",
+          "label": "ثبت‌نام به چه صورتی انجام می‌شود؟",
+          "required": true,
+          "options": [
+            {
+              "value": "individual",
+              "label": "شخص حقیقی",
+              "description": "ثبت‌نام با مشخصات فردی"
+            },
+            {
+              "value": "legal_entity",
+              "label": "شخص حقوقی",
+              "description": "ثبت‌نام به نام شرکت، مؤسسه یا مجموعه ثبت‌شده"
+            }
+          ],
+          "ui": {
+            "control": "selectableCards",
+            "singleSelect": true
+          }
+        },
+        {
+          "id": "identity.individualInfoNote",
+          "type": "info",
+          "text": "نام و نام خانوادگی از مرحله اول استفاده می‌شود؛ در این مرحله فقط اطلاعات تکمیلی فرد را وارد کنید.",
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "individual"
+            }
+          }
+        },
+        {
+          "id": "identity.nationalCode",
+          "type": "nationalId",
+          "label": "کد ملی",
+          "placeholder": "کد ملی ۱۰ رقمی",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "individual"
+            }
+          },
+          "validation": {
+            "country": "IR",
+            "length": 10,
+            "acceptPersianDigits": true,
+            "checksum": "iran_national_code"
+          }
+        },
+        {
+          "id": "identity.residenceCity",
+          "type": "cityAutocomplete",
+          "label": "شهر محل سکونت",
+          "placeholder": "نام شهر را جست‌وجو کنید",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "individual"
+            }
+          },
+          "dataSource": "iran_cities",
+          "allowManualEntry": true
+        },
+        {
+          "id": "identity.legalName",
+          "type": "text",
+          "label": "نام رسمی و ثبتی شرکت یا مؤسسه",
+          "placeholder": "نام کامل مطابق اطلاعات ثبتی",
+          "helperText": "اگر با نام کسب‌وکار متفاوت است، نام رسمی ثبت‌شده را وارد کنید.",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "defaultValueFrom": "business.displayName",
+          "validation": {
+            "minLength": 2,
+            "maxLength": 200,
+            "trim": true
+          }
+        },
+        {
+          "id": "identity.companyCity",
+          "type": "cityAutocomplete",
+          "label": "شهر محل استقرار شرکت",
+          "placeholder": "نام شهر را جست‌وجو کنید",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "dataSource": "iran_cities",
+          "allowManualEntry": true
+        },
+        {
+          "id": "identity.registrationNumber",
+          "type": "text",
+          "label": "شماره ثبت",
+          "placeholder": "شماره ثبت مجموعه",
+          "required": false,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "validation": {
+            "maxLength": 50,
+            "trim": true
+          }
+        },
+        {
+          "id": "identity.legalNationalId",
+          "type": "text",
+          "label": "شناسه ملی شرکت یا مؤسسه",
+          "placeholder": "شناسه ملی",
+          "required": false,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "validation": {
+            "maxLength": 20,
+            "digitsOnlyIfEntered": true,
+            "acceptPersianDigits": true
+          }
+        },
+        {
+          "id": "identity.companyAddress",
+          "type": "textarea",
+          "label": "نشانی شرکت",
+          "placeholder": "نشانی محل شرکت را وارد کنید",
+          "required": false,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "validation": {
+            "maxLength": 500,
+            "trim": true
+          }
+        },
+        {
+          "id": "identity.contactRole",
+          "type": "selectCardsOrDropdown",
+          "label": "سمت شما در مجموعه چیست؟",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "options": [
+            {
+              "value": "owner_or_founder",
+              "label": "مالک یا مؤسس"
+            },
+            {
+              "value": "executive_or_manager",
+              "label": "مدیر مجموعه"
+            },
+            {
+              "value": "authorized_representative",
+              "label": "نماینده مجاز"
+            },
+            {
+              "value": "employee",
+              "label": "کارمند مجموعه"
+            },
+            {
+              "value": "other",
+              "label": "سایر"
+            }
+          ]
+        },
+        {
+          "id": "identity.activityAreas",
+          "type": "multiSelectChips",
+          "label": "حوزه فعالیت مجموعه",
+          "helperText": "می‌توانید بیش از یک مورد انتخاب کنید.",
+          "required": true,
+          "minSelections": 1,
+          "visibleWhen": {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          "optionsByBusinessType": {
+            "travel_agency": [
+              {
+                "value": "ticket_sales",
+                "label": "فروش بلیت و خدمات سفر"
+              },
+              {
+                "value": "domestic_tours",
+                "label": "تورهای داخلی"
+              },
+              {
+                "value": "outbound_tours",
+                "label": "تورهای خارجی"
+              },
+              {
+                "value": "inbound_tours",
+                "label": "تورهای ورودی"
+              },
+              {
+                "value": "corporate_travel",
+                "label": "خدمات سفر سازمانی"
+              },
+              {
+                "value": "transport_transfer",
+                "label": "حمل‌ونقل و ترانسفر"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "organization": [
+              {
+                "value": "technology",
+                "label": "فناوری اطلاعات"
+              },
+              {
+                "value": "manufacturing_industry",
+                "label": "تولید و صنعت"
+              },
+              {
+                "value": "commerce",
+                "label": "بازرگانی و تجارت"
+              },
+              {
+                "value": "professional_services",
+                "label": "خدمات تخصصی"
+              },
+              {
+                "value": "healthcare",
+                "label": "سلامت و درمان"
+              },
+              {
+                "value": "education",
+                "label": "آموزش"
+              },
+              {
+                "value": "logistics_transport",
+                "label": "حمل‌ونقل و لجستیک"
+              },
+              {
+                "value": "tourism_hospitality",
+                "label": "گردشگری و هتلداری"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "online_travel_platform": [
+              {
+                "value": "online_ticketing",
+                "label": "فروش آنلاین بلیت"
+              },
+              {
+                "value": "travel_marketplace",
+                "label": "بازارگاه خدمات سفر"
+              },
+              {
+                "value": "tour_sales",
+                "label": "فروش آنلاین تور"
+              },
+              {
+                "value": "corporate_travel_management",
+                "label": "مدیریت سفر سازمانی"
+              },
+              {
+                "value": "transport_booking",
+                "label": "رزرو آنلاین حمل‌ونقل"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "tour_operator": [
+              {
+                "value": "domestic_tours",
+                "label": "تورهای داخلی"
+              },
+              {
+                "value": "outbound_tours",
+                "label": "تورهای خارجی"
+              },
+              {
+                "value": "inbound_tours",
+                "label": "تورهای ورودی"
+              },
+              {
+                "value": "tour_packages",
+                "label": "طراحی بسته‌های سفر"
+              },
+              {
+                "value": "transport_transfer",
+                "label": "حمل‌ونقل و ترانسفر تور"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "tour_seller": [
+              {
+                "value": "tour_sales",
+                "label": "فروش تور"
+              },
+              {
+                "value": "tour_packages",
+                "label": "فروش بسته‌های سفر"
+              },
+              {
+                "value": "travel_agency_services",
+                "label": "خدمات آژانس مسافرتی"
+              },
+              {
+                "value": "transport_transfer",
+                "label": "حمل‌ونقل و ترانسفر"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "independent_seller": [
+              {
+                "value": "intercity_taxi_sales",
+                "label": "معرفی یا فروش تاکسی بین‌شهری"
+              },
+              {
+                "value": "tour_sales",
+                "label": "معرفی یا فروش تور"
+              },
+              {
+                "value": "travel_services",
+                "label": "سایر خدمات سفر"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ],
+            "other": [
+              {
+                "value": "tourism_travel",
+                "label": "گردشگری و خدمات سفر"
+              },
+              {
+                "value": "transportation",
+                "label": "حمل‌ونقل"
+              },
+              {
+                "value": "commerce",
+                "label": "بازرگانی و فروش"
+              },
+              {
+                "value": "services",
+                "label": "خدمات"
+              },
+              {
+                "value": "other",
+                "label": "سایر"
+              }
+            ]
+          }
+        },
+        {
+          "id": "identity.activityAreasOther",
+          "type": "text",
+          "label": "سایر حوزه‌های فعالیت را وارد کنید",
+          "placeholder": "حوزه فعالیت شما",
+          "required": false,
+          "visibleWhen": {
+            "all": [
+              {
+                "equals": {
+                  "field": "identity.legalForm",
+                  "value": "legal_entity"
+                }
+              },
+              {
+                "contains": {
+                  "field": "identity.activityAreas",
+                  "value": "other"
+                }
+              }
+            ]
+          },
+          "validation": {
+            "maxLength": 150,
+            "trim": true
+          }
+        }
+      ],
+      "primaryAction": {
+        "label": "ادامه",
+        "nextStep": "service_preferences"
+      },
+      "backAction": {
+        "label": "بازگشت",
+        "previousStep": "business_profile"
+      }
+    },
+    {
+      "id": "service_preferences",
+      "stepNumber": 4,
+      "title": "نیازهای خدماتی و آشنایی با مسترشوفر",
+      "description": "",
+      "progressLabel": "نیازهای شما",
+      "fields": [
+        {
+          "id": "preferences.services",
+          "type": "multiSelectCards",
+          "labelByBusinessType": {
+            "travel_agency": "کدام خدمات را می‌خواهید به مشتریان آژانس خود ارائه دهید؟",
+            "organization": "برای چه نوع سفرهایی به خدمات مسترشوفر نیاز دارید؟",
+            "online_travel_platform": "کدام خدمات را می‌خواهید در سامانه خود عرضه یا رزرو کنید؟",
+            "tour_operator": "کدام خدمات حمل‌ونقل را برای تورهای خود نیاز دارید؟",
+            "tour_seller": "کدام خدمات را می‌خواهید در تورها یا بسته‌های سفر خود ارائه کنید؟",
+            "independent_seller": "کدام خدمات را می‌خواهید به مشتریان خود معرفی یا عرضه کنید؟",
+            "other": "کدام خدمات مسترشوفر برای فعالیت شما مناسب‌تر است؟"
+          },
+          "helperText": "هر تعداد گزینه که مرتبط است انتخاب کنید.",
+          "required": true,
+          "minSelections": 1,
+          "maxSelections": 6,
+          "optionsByBusinessType": {
+            "organization": [
+              {
+                "value": "intercity_taxi",
+                "label": "تاکسی بین‌شهری",
+                "description": "سواری بین‌شهری با راننده تأییدشده، مناسب مأموریت‌ها و…",
+                "icon": "vehicle-cab"
+              },
+              {
+                "value": "airport_transfer",
+                "label": "ترانسفر فرودگاهی",
+                "description": "ترانسفر ویژه فرودگاهی، از مقصد تا درب ترمینال",
+                "icon": "airplane-take-off"
+              },
+              {
+                "value": "business_plus_city",
+                "label": "بیزینس پلاس درون‌شهری",
+                "description": "سرویس تشریفاتی و لوکس درون‌شهری با خودروهای لاکچری",
+                "icon": "sparkle"
+              },
+              {
+                "value": "intercity_express",
+                "label": "حمل‌ونقل بار سریع",
+                "description": "جابه‌جایی سریع نامه، اسناد، بارهای کوچک یا حساس با خودرو سواری",
+                "icon": "box"
+              },
+              {
+                "value": "ceremonial_van",
+                "label": "ون تشریفات سازمانی",
+                "description": "سرویس حمل‌ونقل با ون ویژه سازمان‌ها",
+                "icon": "vehicle-bus"
+              },
+              {
+                "value": "not_sure",
+                "label": "هنوز مطمئن نیستم",
+                "description": "در آینده برای انتخاب سرویس مناسب تصمیم‌گیری می‌کنم",
+                "icon": "question-circle"
+              }
+            ],
+            "agency": [
+              {
+                "value": "intercity_taxi",
+                "label": "تاکسی بین‌شهری",
+                "description": "سواری بین‌شهری با راننده تأییدشده، مناسب مأموریت‌ها و…",
+                "icon": "vehicle-cab"
+              },
+              {
+                "value": "airport_transfer",
+                "label": "ترانسفر فرودگاهی",
+                "description": "ترانسفر ویژه فرودگاهی، از مقصد تا درب ترمینال",
+                "icon": "airplane-take-off"
+              },
+              {
+                "value": "business_plus_city",
+                "label": "بیزینس پلاس درون‌شهری",
+                "description": "سرویس تشریفاتی و لوکس درون‌شهری با خودروهای لاکچری",
+                "icon": "sparkle"
+              },
+              {
+                "value": "intercity_express",
+                "label": "حمل‌ونقل بار سریع",
+                "description": "جابه‌جایی سریع نامه، اسناد، بارهای کوچک یا حساس با خودرو سواری",
+                "icon": "box"
+              },
+              {
+                "value": "charter_van",
+                "label": "ون",
+                "description": "حمل‌ونقل مسافران با ون دربستی",
+                "icon": "vehicle-bus"
+              },
+              {
+                "value": "not_sure",
+                "label": "هنوز مطمئن نیستم",
+                "description": "در آینده برای انتخاب سرویس مناسب تصمیم‌گیری می‌کنم",
+                "icon": "question-circle"
+              }
+            ]
+          },
+          "mutuallyExclusiveValues": [
+            "not_sure"
+          ],
+          "ui": {
+            "control": "selectableCards",
+            "multiSelect": true
+          }
+        },
+        {
+          "id": "attribution.source",
+          "type": "radioCardsOrDropdown",
+          "label": "از چه طریقی با مسترشوفر آشنا شدید؟",
+          "required": false,
+          "options": [
+            {
+              "value": "search_engine",
+              "label": "جست‌وجو در اینترنت"
+            },
+            {
+              "value": "social_media",
+              "label": "شبکه‌های اجتماعی"
+            },
+            {
+              "value": "recommendation",
+              "label": "معرفی دوستان یا همکاران"
+            },
+            {
+              "value": "shoofer_team",
+              "label": "ارتباط با تیم مسترشوفر"
+            },
+            {
+              "value": "event_or_meeting",
+              "label": "نمایشگاه، رویداد یا جلسه"
+            },
+            {
+              "value": "existing_partner",
+              "label": "از طریق یکی از همکاران یا مشتریان مسترشوفر"
+            },
+            {
+              "value": "other",
+              "label": "سایر موارد"
+            },
+            {
+              "value": "not_remember",
+              "label": "به خاطر ندارم"
+            }
+          ]
+        },
+        {
+          "id": "attribution.sourceOther",
+          "type": "text",
+          "label": "لطفاً مشخص کنید",
+          "placeholder": "از چه طریقی؟",
+          "required": true,
+          "visibleWhen": {
+            "equals": {
+              "field": "attribution.source",
+              "value": "other"
+            }
+          },
+          "validation": {
+            "minLength": 2,
+            "maxLength": 150,
+            "trim": true
+          }
+        }
+      ],
+      "primaryAction": {
+        "label": "ادامه",
+        "nextStep": "review_submit"
+      },
+      "backAction": {
+        "label": "بازگشت",
+        "previousStep": "identity"
+      }
+    },
+    {
+      "id": "review_submit",
+      "stepNumber": 5,
+      "title": "مرور و ارسال درخواست",
+      "description": "اطلاعات واردشده را بررسی کنید، شرایط را بپذیرید و درخواست پنل را ارسال کنید.",
+      "progressLabel": "مرور نهایی",
+      "summary": {
+        "enabled": true,
+        "sections": [
+          {
+            "id": "contact",
+            "title": "اطلاعات تماس",
+            "fields": [
+              "access.panel",
+              "contact.firstName",
+              "contact.lastName",
+              "contact.mobile",
+              "contact.email"
+            ],
+            "editStep": "contact"
+          },
+          {
+            "id": "business",
+            "title": "اطلاعات کسب‌وکار",
+            "fields": [
+              "business.type",
+              "business.typeOther",
+              "business.displayName",
+              "business.hasWebsite",
+              "business.websiteOrSocial"
+            ],
+            "editStep": "business_profile"
+          },
+          {
+            "id": "identity",
+            "title": "اطلاعات هویتی و ثبتی",
+            "fields": [
+              "identity.legalForm",
+              "identity.nationalCode",
+              "identity.residenceCity",
+              "identity.legalName",
+              "identity.companyCity",
+              "identity.registrationNumber",
+              "identity.legalNationalId",
+              "identity.companyAddress",
+              "identity.contactRole",
+              "identity.activityAreas",
+              "identity.activityAreasOther"
+            ],
+            "editStep": "identity"
+          },
+          {
+            "id": "services",
+            "title": "نیازهای خدماتی",
+            "fields": [
+              "preferences.services"
+            ],
+            "editStep": "service_preferences"
+          },
+          {
+            "id": "attribution",
+            "title": "نحوه آشنایی با مسترشوفر",
+            "fields": [
+              "attribution.source",
+              "attribution.sourceOther"
+            ],
+            "editStep": "service_preferences"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "id": "consent.termsAccepted",
+          "type": "checkbox",
+          "label": "شرایط استفاده از خدمات را می‌پذیرم.",
+          "required": true,
+          "linkKey": "terms_of_service"
+        },
+        {
+          "id": "consent.privacyAccepted",
+          "type": "checkbox",
+          "label": "اطلاعیه حریم خصوصی را مطالعه کرده‌ام.",
+          "required": true,
+          "linkKey": "privacy_notice"
+        }
+      ],
+      "primaryAction": {
+        "label": "ثبت درخواست پنل",
+        "action": "submitApplication"
+      },
+      "backAction": {
+        "label": "بازگشت",
+        "previousStep": "service_preferences"
+      }
+    }
+  ],
+  "logicRules": [
+    {
+      "id": "business_type_dynamic_name_label",
+      "when": {
+        "isSet": {
+          "field": "business.type"
+        }
+      },
+      "then": [
+        {
+          "action": "setLabelFromMap",
+          "field": "business.displayName",
+          "map": "labelByBusinessType"
+        },
+        {
+          "action": "setPlaceholderFromMap",
+          "field": "business.displayName",
+          "map": "placeholderByBusinessType"
+        }
+      ]
+    },
+    {
+      "id": "other_business_type_explanation",
+      "when": {
+        "equals": {
+          "field": "business.type",
+          "value": "other"
+        }
+      },
+      "then": [
+        {
+          "action": "show",
+          "field": "business.typeOther"
+        },
+        {
+          "action": "require",
+          "field": "business.typeOther"
+        }
+      ]
+    },
+    {
+      "id": "independent_seller_business_name_optional",
+      "when": {
+        "equals": {
+          "field": "business.type",
+          "value": "independent_seller"
+        }
+      },
+      "then": [
+        {
+          "action": "setRequired",
+          "field": "business.displayName",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "legal_form_branch",
+      "when": {
+        "isSet": {
+          "field": "identity.legalForm"
+        }
+      },
+      "then": [
+        {
+          "action": "showWhenEquals",
+          "fieldGroup": "individual_identity_fields",
+          "field": "identity.legalForm",
+          "value": "individual"
+        },
+        {
+          "action": "showWhenEquals",
+          "fieldGroup": "legal_entity_fields",
+          "field": "identity.legalForm",
+          "value": "legal_entity"
+        },
+        {
+          "action": "clearHiddenFieldValues",
+          "scope": "identity"
+        }
+      ]
+    },
+    {
+      "id": "legal_entity_business_name_prefill",
+      "when": {
+        "all": [
+          {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          {
+            "isEmpty": {
+              "field": "identity.legalName"
+            }
+          }
+        ]
+      },
+      "then": [
+        {
+          "action": "copyValue",
+          "from": "business.displayName",
+          "to": "identity.legalName",
+          "onlyIfEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "legal_entity_activity_options_by_business_type",
+      "when": {
+        "all": [
+          {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          {
+            "isSet": {
+              "field": "business.type"
+            }
+          }
+        ]
+      },
+      "then": [
+        {
+          "action": "setOptionsFromMap",
+          "field": "identity.activityAreas",
+          "map": "optionsByBusinessType",
+          "keyField": "business.type"
+        }
+      ]
+    },
+    {
+      "id": "activity_other_details",
+      "when": {
+        "all": [
+          {
+            "equals": {
+              "field": "identity.legalForm",
+              "value": "legal_entity"
+            }
+          },
+          {
+            "contains": {
+              "field": "identity.activityAreas",
+              "value": "other"
+            }
+          }
+        ]
+      },
+      "then": [
+        {
+          "action": "show",
+          "field": "identity.activityAreasOther"
+        }
+      ]
+    },
+    {
+      "id": "service_prompt_by_business_type",
+      "when": {
+        "isSet": {
+          "field": "business.type"
+        }
+      },
+      "then": [
+        {
+          "action": "setLabelFromMap",
+          "field": "preferences.services",
+          "map": "labelByBusinessType"
+        }
+      ]
+    },
+    {
+      "id": "services_not_sure_exclusive",
+      "when": {
+        "contains": {
+          "field": "preferences.services",
+          "value": "not_sure"
+        }
+      },
+      "then": [
+        {
+          "action": "makeExclusiveSelection",
+          "field": "preferences.services",
+          "value": "not_sure"
+        }
+      ]
+    },
+    {
+      "id": "source_other_details",
+      "when": {
+        "equals": {
+          "field": "attribution.source",
+          "value": "other"
+        }
+      },
+      "then": [
+        {
+          "action": "show",
+          "field": "attribution.sourceOther"
+        },
+        {
+          "action": "require",
+          "field": "attribution.sourceOther"
+        }
+      ]
+    },
+    {
+      "id": "clear_hidden_values",
+      "when": {
+        "onAnyConditionChange": true
+      },
+      "then": [
+        {
+          "action": "clearValuesForHiddenFields"
+        },
+        {
+          "action": "excludeHiddenFieldsFromValidationAndPayload"
+        }
+      ]
+    }
+  ],
+  "businessTypeLabelMap": {
+    "travel_agency": "آژانس مسافرتی",
+    "organization": "شرکت یا سازمان",
+    "online_travel_platform": "پلتفرم یا سامانه فروش آنلاین",
+    "tour_operator": "مجری یا برگزارکننده تور",
+    "tour_seller": "فروشنده تور یا بسته سفر",
+    "independent_seller": "فروشنده مستقل خدمات سفر",
+    "other": "سایر"
+  },
+  "serviceQuestionLabels": {
+    "travel_agency": "کدام خدمات را می‌خواهید به مشتریان آژانس خود ارائه دهید؟",
+    "organization": "برای چه نوع سفرهایی به خدمات مسترشوفر نیاز دارید؟",
+    "online_travel_platform": "کدام خدمات را می‌خواهید در سامانه خود عرضه یا رزرو کنید؟",
+    "tour_operator": "کدام خدمات حمل‌ونقل را برای تورهای خود نیاز دارید؟",
+    "tour_seller": "کدام خدمات را می‌خواهید در تورها یا بسته‌های سفر خود ارائه کنید؟",
+    "independent_seller": "کدام خدمات را می‌خواهید به مشتریان خود معرفی یا عرضه کنید؟",
+    "other": "کدام خدمات مسترشوفر برای فعالیت شما مناسب‌تر است؟"
+  },
+  "payloadSchema": {
+    "applicationId": "server_generated",
+    "applicationStatus": "submitted",
+    "panelStatus": "pending_approval",
+    "contact": {
+      "firstName": "string",
+      "lastName": "string",
+      "mobileE164": "string",
+      "mobileVerified": "boolean",
+      "email": "string|null"
+    },
+    "business": {
+      "type": "enum",
+      "typeOther": "string|null",
+      "displayName": "string|null",
+      "websiteOrSocial": "string|null"
+    },
+    "identity": {
+      "legalForm": "individual|legal_entity",
+      "nationalCode": "string|null",
+      "residenceCity": "string|null",
+      "legalName": "string|null",
+      "registrationNumber": "string|null",
+      "legalNationalId": "string|null",
+      "companyCity": "string|null",
+      "companyAddress": "string|null",
+      "contactRole": "string|null",
+      "contactRoleOther": "string|null",
+      "activityAreas": [
+        "string"
+      ],
+      "activityAreasOther": "string|null"
+    },
+    "preferences": {
+      "services": [
+        "string"
+      ]
+    },
+    "attribution": {
+      "source": "string|null",
+      "sourceOther": "string|null"
+    },
+    "consent": {
+      "termsAccepted": "boolean",
+      "privacyAccepted": "boolean"
+    },
+    "metadata": {
+      "createdAt": "server_generated",
+      "schemaVersion": "1.0.0"
+    }
+  },
+  "submissionRules": [
+    "شماره موبایل باید با OTP تأیید شده باشد.",
+    "فقط فیلدهای قابل مشاهده و معتبر در payload نهایی ارسال شوند.",
+    "پس از تغییر گزینه‌های شرطی، مقادیر فیلدهای مخفی پاک شوند تا اطلاعات ناسازگار ذخیره نشود.",
+    "کد ملی شخص حقیقی در صورت ورود با کنترل رقم اعتبارسنجی شود؛ شماره ثبت و شناسه ملی حقوقی اختیاری بمانند.",
+    "اطلاعات هویتی حساس فقط برای هدف مشخص، با دسترسی محدود و سیاست نگهداری روشن ذخیره شود.",
+    "از ثبت تکراری درخواست برای یک شماره موبایل جلوگیری شود یا مسیر ادامه درخواست قبلی نمایش داده شود."
+  ],
+  "completionStates": [
+    {
+      "when": {
+        "equals": {
+          "field": "panelStatus",
+          "value": "active"
+        }
+      },
+      "title": "پنل شما آماده است",
+      "message": "ثبت‌نام انجام شد و دسترسی پنل شما فعال است.",
+      "primaryAction": "ورود به پنل"
+    },
+    {
+      "when": {
+        "equals": {
+          "field": "panelStatus",
+          "value": "pending_approval"
+        }
+      },
+      "title": "درخواست شما ثبت شد",
+      "message": "اطلاعات شما با موفقیت دریافت شد. نتیجه بررسی از طریق پیامک اطلاع‌رسانی می‌شود.",
+      "primaryAction": "پیگیری وضعیت درخواست"
+    },
+    {
+      "when": {
+        "equals": {
+          "field": "applicationStatus",
+          "value": "needs_more_information"
+        }
+      },
+      "title": "تکمیل اطلاعات لازم است",
+      "message": "برای ادامه فرایند، اطلاعات مشخص‌شده را تکمیل کنید.",
+      "primaryAction": "تکمیل اطلاعات"
+    },
+    {
+      "when": {
+        "equals": {
+          "field": "applicationStatus",
+          "value": "rejected"
+        }
+      },
+      "title": "درخواست تأیید نشد",
+      "message": "دلیل و مسیر پیگیری باید به‌صورت شفاف نمایش داده شود.",
+      "primaryAction": "مشاهده جزئیات"
+    }
+  ],
+  "implementationNotes": [
+    "business.type مشخص می‌کند کاربر چه نوع فعالیتی دارد؛ identity.legalForm مشخص می‌کند درخواست به نام شخص حقیقی است یا شخصیت حقوقی. این دو فیلد معادل هم نیستند.",
+    "برای جلوگیری از شلوغی، گزینه‌های business.type و identity.legalForm به‌صورت کارت‌های انتخابی نمایش داده شوند؛ activityAreas و preferences.services با چیپ یا کارت چندانتخابی نمایش داده شوند.",
+    "در مرحله آخر، خلاصه فقط فیلدهای مرتبط با شاخه انتخاب‌شده را نشان دهد و هر بخش دکمه ویرایش به مرحله مربوط داشته باشد.",
+    "کاتالوگ خدمات باید با خدمات واقعاً فعال مسترشوفر همگام باشد؛ گزینه‌های غیرقابل ارائه در محیط نهایی نمایش داده نشوند.",
+    "اگر شرکت نیازمند تأیید دستی است، پنل را تا زمان تأیید در وضعیت pending نگه دارید؛ پیام موفقیت نباید به‌اشتباه بگوید پنل فعال شده است.",
+    "پرسش «از چه طریقی با مسترشوفر آشنا شدید؟» در مرحله نیازهای خدماتی نمایش داده می‌شود؛ مرحله نهایی فقط برای مرور اطلاعات، پذیرش شرایط و ارسال درخواست است."
+  ]
+}

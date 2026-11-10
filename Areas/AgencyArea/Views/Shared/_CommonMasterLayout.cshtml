@@ -70,10 +70,10 @@
 
 	<script src='~/js/@ViewData["main"]main.js'></script>
 
-	<!-- Page Scripts-->
-	@RenderSection("PageScripts", required: false)
-
 	@RenderBody()
+
+	<!-- Page Scripts (after body so DOM nodes exist for page JS) -->
+	@RenderSection("PageScripts", required: false)
 
 </body>
 

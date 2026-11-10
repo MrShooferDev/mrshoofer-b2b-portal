@@ -8,6 +8,9 @@
     ViewData["title"] = "جستجوی سواری";
     var tripFocus = Context.Request.Query["tripFocus"].ToString().Trim().ToLowerInvariant();
     var tripHeroImage = tripFocus == "airport" ? "hero-airport" : "hero-travel";
+    var searchPersianDate = ViewBag.searchpdate as Application.Services.PersianDate;
+    var selectedDateWeekday = searchPersianDate?.DayOfWeek ?? "—";
+    var selectedDateValue = searchPersianDate?.ToShortDateString() ?? (ViewBag.searchdate as string ?? "—");
 }
 
 
@@ -370,8 +373,8 @@
 								</label>
 								<label class="mt-1 ms-1 trips-selected-date-label">
 									روز
-									<span class="trips-selected-date-weekday">@(((Application.Services.PersianDate)ViewBag.searchpdate).DayOfWeek)</span>
-									<span class="ms-1 trips-selected-date-value">@(((Application.Services.PersianDate)ViewBag.searchpdate).ToShortDateString())</span>
+									<span class="trips-selected-date-weekday">@selectedDateWeekday</span>
+									<span class="ms-1 trips-selected-date-value">@selectedDateValue</span>
 								</label>
 							</div>
 						</div>

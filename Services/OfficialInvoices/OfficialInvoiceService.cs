@@ -43,7 +43,25 @@ namespace Application.Services.OfficialInvoices
         Ok = 0,
         NotFound = 1,
         Cancelled = 2,
-        AlreadyInvoiced = 3
+        AlreadyInvoiced = 3,
+        MixedPassengers = 4
+    }
+
+    public class EligibleTicketItem
+    {
+        public int TicketId { get; set; }
+        public string TicketCode { get; set; } = "";
+        public string PassengerName { get; set; } = "";
+        public string? NationalId { get; set; }
+        public string RouteLabel { get; set; } = "";
+        public string? ServiceName { get; set; }
+        public int AmountToman { get; set; }
+        public DateTime RegisteredAt { get; set; }
+        public bool Eligible { get; set; }
+        public string? BlockReason { get; set; }
+        public int? ActiveInvoiceId { get; set; }
+        public string? ActiveInvoiceSerial { get; set; }
+        public OfficialInvoiceUploadStatus? ActiveInvoiceStatus { get; set; }
     }
 
     public interface IOfficialInvoiceService
@@ -51,9 +69,15 @@ namespace Application.Services.OfficialInvoices
         InvoiceSerialSettings GetSerialSettings();
         string FormatSerial(string pattern, string prefix, int sequence, DateTime at);
         Task<OfficialInvoice> CreateAsync(OfficialInvoice invoice, CancellationToken cancellationToken = default);
+        Task<OfficialInvoice> CreateFromTicketsAsync(
+            int agencyId, IReadOnlyList<string> ticketCodes, string? createdBy, CancellationToken cancellationToken = default);
         Task<(TicketInvoiceEligibility Status, Ticket? Ticket, OfficialInvoice? ExistingInvoice)> ResolveEligibleTicketAsync(
             string ticketCode, int agencyId, CancellationToken cancellationToken = default);
         Task PrefillFromTicketAsync(OfficialInvoice invoice, Ticket ticket, int agencyId);
+        Task<IReadOnlyList<EligibleTicketItem>> ListEligibleTicketsAsync(
+            int agencyId, bool isOrganization, CancellationToken cancellationToken = default);
+        Task<OfficialInvoice?> CancelPendingAsync(
+            int invoiceId, int agencyId, CancellationToken cancellationToken = default);
         Task<OfficialInvoice?> SetUploadStatusAsync(
             int invoiceId, OfficialInvoiceUploadStatus status, string? changedBy, CancellationToken cancellationToken = default);
         Task<InvoiceSellerProfile> GetSellerProfileAsync(CancellationToken cancellationToken = default);
@@ -134,25 +158,74 @@ namespace Application.Services.OfficialInvoices
             invoice.UploadedBy = null;
             invoice.Notes = OfficialInvoiceSeller.MoodianNote;
 
-            var s = await _db.InvoiceSerialConfigs.FirstOrDefaultAsync(cancellationToken);
-            if (s == null)
-            {
-                s = new InvoiceSerialConfig();
-                _db.InvoiceSerialConfigs.Add(s);
-            }
-            var pattern = string.IsNullOrWhiteSpace(s.Pattern) ? "{n}-{prefix}" : s.Pattern.Trim();
-            var prefix = string.IsNullOrWhiteSpace(s.Prefix) ? "2209" : s.Prefix.Trim();
-            var seq = s.NextSequence < 1 ? 1 : s.NextSequence;
-            invoice.SerialNumber = FormatSerial(pattern, prefix, seq, invoice.InvoiceDate == default ? DateTime.Now : invoice.InvoiceDate);
-            s.NextSequence = seq + 1;
+            await AssignSerialAsync(invoice, cancellationToken);
 
             if (invoice.InvoiceDate == default) invoice.InvoiceDate = DateTime.Today;
             invoice.CreatedAt = DateTime.Now;
             invoice.LinesJson = JsonSerializer.Serialize(invoice.Lines, JsonOpts);
 
+            if (invoice.InvoiceTickets.Count == 0 && invoice.TicketId is int tid)
+            {
+                invoice.InvoiceTickets.Add(new OfficialInvoiceTicket
+                {
+                    TicketId = tid,
+                    TicketCode = invoice.TicketCode ?? "",
+                    AmountToman = (int)Math.Max(0, invoice.PayableRials / 10),
+                    PassengerName = invoice.BuyerName,
+                    RouteLabel = null
+                });
+            }
+
             _db.OfficialInvoices.Add(invoice);
             await _db.SaveChangesAsync(cancellationToken);
             return invoice;
+        }
+
+        public async Task<OfficialInvoice> CreateFromTicketsAsync(
+            int agencyId, IReadOnlyList<string> ticketCodes, string? createdBy, CancellationToken cancellationToken = default)
+        {
+            var codes = (ticketCodes ?? Array.Empty<string>())
+                .Select(c => (c ?? "").Trim())
+                .Where(c => c.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (codes.Count == 0)
+                throw new InvalidOperationException("حداقل یک بلیط انتخاب کنید.");
+
+            var agency = await _db.Agencies.AsNoTracking().FirstOrDefaultAsync(a => a.Id == agencyId, cancellationToken)
+                ?? throw new InvalidOperationException("آژانس پیدا نشد.");
+
+            var tickets = new List<Ticket>();
+            foreach (var code in codes)
+            {
+                var (status, ticket, existing) = await ResolveEligibleTicketAsync(code, agencyId, cancellationToken);
+                if (status == TicketInvoiceEligibility.AlreadyInvoiced && existing != null)
+                    throw new InvalidOperationException($"بلیط {code} قبلاً در فاکتور {existing.SerialNumber} استفاده شده است.");
+                if (status != TicketInvoiceEligibility.Ok || ticket == null)
+                    throw new InvalidOperationException(EligibilityMessage(status, code));
+                tickets.Add(ticket);
+            }
+
+            if (!agency.IsOrganization)
+            {
+                var nationalIds = tickets
+                    .Select(t => (t.NaCode ?? "").Trim())
+                    .Where(n => n.Length > 0)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (nationalIds.Count > 1)
+                    throw new InvalidOperationException(
+                        "برای آژانس فروشنده، همه بلیط‌های یک فاکتور باید متعلق به یک مسافر (یک کد ملی) باشند.");
+            }
+
+            var invoice = new OfficialInvoice
+            {
+                AgencyId = agencyId,
+                CreatedBy = createdBy,
+                InvoiceTickets = new List<OfficialInvoiceTicket>()
+            };
+            await PrefillFromTicketsInternalAsync(invoice, tickets, agency);
+            return await CreateAsync(invoice, cancellationToken);
         }
 
         public async Task<(TicketInvoiceEligibility Status, Ticket? Ticket, OfficialInvoice? ExistingInvoice)> ResolveEligibleTicketAsync(
@@ -170,25 +243,156 @@ namespace Application.Services.OfficialInvoices
             if (ticket.IsCancelled)
                 return (TicketInvoiceEligibility.Cancelled, ticket, null);
 
-            var existing = await _db.OfficialInvoices.AsNoTracking()
-                .Where(i => i.AgencyId == agencyId && i.TicketId == ticket.Id)
+            var viaJunction = await _db.OfficialInvoiceTickets.AsNoTracking()
+                .Where(t => t.TicketId == ticket.Id)
+                .Join(
+                    _db.OfficialInvoices.AsNoTracking().Where(i =>
+                        i.AgencyId == agencyId &&
+                        (i.UploadStatus == OfficialInvoiceUploadStatus.Pending ||
+                         i.UploadStatus == OfficialInvoiceUploadStatus.Uploaded)),
+                    t => t.OfficialInvoiceId,
+                    i => i.Id,
+                    (_, i) => i)
                 .OrderByDescending(i => i.Id)
                 .FirstOrDefaultAsync(cancellationToken);
-            if (existing != null)
-                return (TicketInvoiceEligibility.AlreadyInvoiced, ticket, existing);
+
+            if (viaJunction != null)
+                return (TicketInvoiceEligibility.AlreadyInvoiced, ticket, viaJunction);
+
+            var viaLegacy = await _db.OfficialInvoices.AsNoTracking()
+                .Where(i => i.AgencyId == agencyId
+                            && i.TicketId == ticket.Id
+                            && (i.UploadStatus == OfficialInvoiceUploadStatus.Pending
+                                || i.UploadStatus == OfficialInvoiceUploadStatus.Uploaded))
+                .OrderByDescending(i => i.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (viaLegacy != null)
+                return (TicketInvoiceEligibility.AlreadyInvoiced, ticket, viaLegacy);
 
             return (TicketInvoiceEligibility.Ok, ticket, null);
         }
 
         public async Task PrefillFromTicketAsync(OfficialInvoice invoice, Ticket ticket, int agencyId)
         {
-            await PrefillFromTicketInternalAsync(invoice, ticket, agencyId);
+            var agency = await _db.Agencies.AsNoTracking().FirstOrDefaultAsync(a => a.Id == agencyId);
+            await PrefillFromTicketsInternalAsync(invoice, new[] { ticket }, agency);
         }
 
-        private async Task PrefillFromTicketInternalAsync(OfficialInvoice invoice, Ticket ticket, int agencyId)
+        public async Task<IReadOnlyList<EligibleTicketItem>> ListEligibleTicketsAsync(
+            int agencyId, bool isOrganization, CancellationToken cancellationToken = default)
         {
-            invoice.TicketId = ticket.Id;
-            invoice.TicketCode = ticket.TicketCode;
+            // All non-cancelled tickets — recent and already-travelled alike.
+            // Newest registration first; cancelled tickets stay out of the invoice picker.
+            var tickets = await _db.Tickets.AsNoTracking()
+                .Where(t => EF.Property<int>(t, "AgencyId") == agencyId && !t.IsCancelled)
+                .OrderByDescending(t => t.RegisteredAt)
+                .ThenByDescending(t => t.Id)
+                .Take(500)
+                .ToListAsync(cancellationToken);
+
+            var ticketIds = tickets.Select(t => t.Id).ToList();
+
+            var activeLinks = ticketIds.Count == 0
+                ? new List<(int TicketId, OfficialInvoice Invoice)>()
+                : (await (
+                    from link in _db.OfficialInvoiceTickets.AsNoTracking()
+                    join inv in _db.OfficialInvoices.AsNoTracking() on link.OfficialInvoiceId equals inv.Id
+                    where ticketIds.Contains(link.TicketId)
+                          && inv.AgencyId == agencyId
+                          && (inv.UploadStatus == OfficialInvoiceUploadStatus.Pending
+                              || inv.UploadStatus == OfficialInvoiceUploadStatus.Uploaded)
+                    select new { link.TicketId, Invoice = inv }
+                ).ToListAsync(cancellationToken))
+                .Select(x => (x.TicketId, x.Invoice))
+                .ToList();
+
+            var legacy = ticketIds.Count == 0
+                ? new List<OfficialInvoice>()
+                : await _db.OfficialInvoices.AsNoTracking()
+                    .Where(i => i.AgencyId == agencyId
+                                && i.TicketId != null
+                                && ticketIds.Contains(i.TicketId.Value)
+                                && (i.UploadStatus == OfficialInvoiceUploadStatus.Pending
+                                    || i.UploadStatus == OfficialInvoiceUploadStatus.Uploaded))
+                    .ToListAsync(cancellationToken);
+
+            var activeByTicket = new Dictionary<int, OfficialInvoice>();
+            foreach (var row in activeLinks)
+                activeByTicket.TryAdd(row.TicketId, row.Invoice);
+            foreach (var inv in legacy)
+            {
+                if (inv.TicketId is int tid)
+                    activeByTicket.TryAdd(tid, inv);
+            }
+
+            var items = new List<EligibleTicketItem>(tickets.Count);
+            foreach (var ticket in tickets)
+            {
+                var passenger = $"{ticket.Firstname} {ticket.Lastname}".Trim();
+                var route = $"{ticket.TripOrigin} به {ticket.TripDestination}";
+                var item = new EligibleTicketItem
+                {
+                    TicketId = ticket.Id,
+                    TicketCode = ticket.TicketCode,
+                    PassengerName = passenger,
+                    NationalId = NullIfBlank(ticket.NaCode),
+                    RouteLabel = route,
+                    ServiceName = NullIfBlank(ticket.ServiceName),
+                    AmountToman = ticket.TicketFinalPrice,
+                    RegisteredAt = ticket.RegisteredAt
+                };
+
+                if (activeByTicket.TryGetValue(ticket.Id, out var inv))
+                {
+                    item.Eligible = false;
+                    item.ActiveInvoiceId = inv.Id;
+                    item.ActiveInvoiceSerial = inv.SerialNumber;
+                    item.ActiveInvoiceStatus = inv.UploadStatus;
+                    item.BlockReason = inv.UploadStatus == OfficialInvoiceUploadStatus.Uploaded
+                        ? "ثبت‌شده در مودیان"
+                        : "درحال صدور";
+                }
+                else
+                {
+                    item.Eligible = true;
+                }
+
+                items.Add(item);
+            }
+
+            // Seller UX: mixed-passenger rule is enforced at create time.
+            _ = isOrganization;
+            return items;
+        }
+
+        public async Task<OfficialInvoice?> CancelPendingAsync(
+            int invoiceId, int agencyId, CancellationToken cancellationToken = default)
+        {
+            var invoice = await _db.OfficialInvoices
+                .FirstOrDefaultAsync(i => i.Id == invoiceId && i.AgencyId == agencyId, cancellationToken);
+            if (invoice == null) return null;
+            if (invoice.UploadStatus != OfficialInvoiceUploadStatus.Pending)
+                throw new InvalidOperationException("فقط درخواست‌های درحال صدور قابل لغو هستند.");
+
+            invoice.UploadStatus = OfficialInvoiceUploadStatus.Cancelled;
+            invoice.UploadedAt = null;
+            invoice.UploadedBy = null;
+            await _db.SaveChangesAsync(cancellationToken);
+            return invoice;
+        }
+
+        private async Task PrefillFromTicketsInternalAsync(
+            OfficialInvoice invoice, IReadOnlyList<Ticket> tickets, Agency? agency)
+        {
+            if (tickets.Count == 0)
+                throw new InvalidOperationException("حداقل یک بلیط لازم است.");
+
+            var first = tickets[0];
+            var agencyId = agency?.Id ?? invoice.AgencyId;
+            var isOrg = agency?.IsOrganization == true;
+
+            invoice.TicketId = first.Id;
+            invoice.TicketCode = first.TicketCode;
             invoice.AgencyId = agencyId;
             invoice.InvoiceDate = DateTime.Today;
             invoice.PaymentIsCash = true;
@@ -197,20 +401,15 @@ namespace Application.Services.OfficialInvoices
             invoice.UploadedAt = null;
             invoice.UploadedBy = null;
 
-            var agency = await _db.Agencies.AsNoTracking().FirstOrDefaultAsync(a => a.Id == agencyId);
-            var isOrg = agency?.IsOrganization == true;
-
-            // Organization: buyer = agency legal profile.
-            // Agency (seller): buyer = ticket passenger (no agency financial IDs).
-            var passengerName = $"{ticket.Firstname} {ticket.Lastname}".Trim();
+            var passengerName = $"{first.Firstname} {first.Lastname}".Trim();
             if (isOrg && agency != null)
             {
                 invoice.BuyerName = agency.Name;
-                invoice.BuyerNationalId = NullIfBlank(agency.NationalId) ?? ticket.NaCode;
+                invoice.BuyerNationalId = NullIfBlank(agency.NationalId) ?? first.NaCode;
                 invoice.BuyerEconomicNo = NullIfBlank(agency.EconomicNo);
                 invoice.BuyerRegistrationNo = NullIfBlank(agency.RegistrationNo);
                 invoice.BuyerAddress = NullIfBlank(agency.Address);
-                invoice.BuyerPhone = NullIfBlank(agency.PhoneNumber) ?? ticket.PhoneNumber;
+                invoice.BuyerPhone = NullIfBlank(agency.PhoneNumber) ?? first.PhoneNumber;
                 invoice.BuyerFax = NullIfBlank(agency.Fax);
                 invoice.BuyerProvince = NullIfBlank(agency.Province);
                 invoice.BuyerCounty = NullIfBlank(agency.County);
@@ -220,11 +419,11 @@ namespace Application.Services.OfficialInvoices
             else
             {
                 invoice.BuyerName = passengerName;
-                invoice.BuyerNationalId = NullIfBlank(ticket.NaCode);
+                invoice.BuyerNationalId = NullIfBlank(first.NaCode);
                 invoice.BuyerEconomicNo = null;
                 invoice.BuyerRegistrationNo = null;
                 invoice.BuyerAddress = null;
-                invoice.BuyerPhone = NullIfBlank(ticket.PhoneNumber);
+                invoice.BuyerPhone = NullIfBlank(first.PhoneNumber);
                 invoice.BuyerFax = null;
                 invoice.BuyerProvince = null;
                 invoice.BuyerCounty = null;
@@ -232,25 +431,43 @@ namespace Application.Services.OfficialInvoices
                 invoice.BuyerPostalCode = null;
             }
 
-            var rials = (long)ticket.TicketFinalPrice * 10;
-            var serviceBit = string.IsNullOrWhiteSpace(ticket.ServiceName) ? "" : $" ({ticket.ServiceName})";
-            invoice.Lines = new List<OfficialInvoiceLine>
+            invoice.Lines = new List<OfficialInvoiceLine>();
+            invoice.InvoiceTickets = new List<OfficialInvoiceTicket>();
+
+            foreach (var ticket in tickets)
             {
-                new()
+                var name = $"{ticket.Firstname} {ticket.Lastname}".Trim();
+                var rials = (long)ticket.TicketFinalPrice * 10;
+                var serviceBit = string.IsNullOrWhiteSpace(ticket.ServiceName) ? "" : $" ({ticket.ServiceName})";
+                var route = $"{ticket.TripOrigin} به {ticket.TripDestination}";
+                invoice.Lines.Add(new OfficialInvoiceLine
                 {
                     ItemCode = ticket.TicketCode,
-                    Description = $"بابت سفر {ticket.TripOrigin} به {ticket.TripDestination}{serviceBit} با کد بلیط {ticket.TicketCode} به مبلغ {rials.ToString("N0")} ریال. برای مسافر: {passengerName}",
+                    Description =
+                        $"بابت سفر {ticket.TripOrigin} به {ticket.TripDestination}{serviceBit} با کد بلیط {ticket.TicketCode} به مبلغ {rials.ToString("N0")} ریال. برای مسافر: {name}",
                     Quantity = 1,
                     Unit = "سفر",
                     UnitAmountRials = rials
-                }
-            };
+                });
+                invoice.InvoiceTickets.Add(new OfficialInvoiceTicket
+                {
+                    TicketId = ticket.Id,
+                    TicketCode = ticket.TicketCode,
+                    AmountToman = ticket.TicketFinalPrice,
+                    PassengerName = name,
+                    RouteLabel = route
+                });
+            }
+
             Recalc(invoice);
         }
 
         public async Task<OfficialInvoice?> SetUploadStatusAsync(
             int invoiceId, OfficialInvoiceUploadStatus status, string? changedBy, CancellationToken cancellationToken = default)
         {
+            if (status == OfficialInvoiceUploadStatus.Cancelled)
+                throw new InvalidOperationException("Admin cannot set Cancelled via upload status; use CancelPending.");
+
             var invoice = await _db.OfficialInvoices.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
             if (invoice == null) return null;
 
@@ -325,6 +542,33 @@ namespace Application.Services.OfficialInvoices
             invoice.DiscountRials = invoice.Lines.Sum(l => l.DiscountRials);
             invoice.VatRials = invoice.Lines.Sum(l => l.VatRials);
             invoice.PayableRials = invoice.Lines.Sum(l => l.PayableRials);
+        }
+
+        public static string EligibilityMessage(TicketInvoiceEligibility status, string? ticketCode = null)
+        {
+            var codeBit = string.IsNullOrWhiteSpace(ticketCode) ? "" : $" ({ticketCode.Trim()})";
+            return status switch
+            {
+                TicketInvoiceEligibility.Cancelled => $"برای بلیط لغوشده نمی‌توان فاکتور رسمی صادر کرد{codeBit}.",
+                TicketInvoiceEligibility.AlreadyInvoiced => $"برای این بلیط قبلاً فاکتور صادر شده است{codeBit}.",
+                TicketInvoiceEligibility.MixedPassengers => "بلیط‌های انتخاب‌شده متعلق به مسافران مختلف هستند.",
+                _ => $"این بلیط متعلق به آژانس شما نیست، پیدا نشد، یا قابل صدور فاکتور نیست{codeBit}."
+            };
+        }
+
+        private async Task AssignSerialAsync(OfficialInvoice invoice, CancellationToken cancellationToken)
+        {
+            var s = await _db.InvoiceSerialConfigs.FirstOrDefaultAsync(cancellationToken);
+            if (s == null)
+            {
+                s = new InvoiceSerialConfig();
+                _db.InvoiceSerialConfigs.Add(s);
+            }
+            var pattern = string.IsNullOrWhiteSpace(s.Pattern) ? "{n}-{prefix}" : s.Pattern.Trim();
+            var prefix = string.IsNullOrWhiteSpace(s.Prefix) ? "2209" : s.Prefix.Trim();
+            var seq = s.NextSequence < 1 ? 1 : s.NextSequence;
+            invoice.SerialNumber = FormatSerial(pattern, prefix, seq, invoice.InvoiceDate == default ? DateTime.Now : invoice.InvoiceDate);
+            s.NextSequence = seq + 1;
         }
 
         private static string? NullIfBlank(string? value) =>

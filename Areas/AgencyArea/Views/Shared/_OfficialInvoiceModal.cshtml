@@ -1,0 +1,106 @@
+@{
+	var isOrganization = ViewBag.InvoiceModalIsOrganization != null && Convert.ToBoolean(ViewBag.InvoiceModalIsOrganization);
+	var preselectTicketCode = ViewBag.InvoiceModalPreselect as string ?? "";
+	var autoOpen = ViewBag.InvoiceModalAutoOpen != null && Convert.ToBoolean(ViewBag.InvoiceModalAutoOpen);
+	var homeUrl = Url.Action("Index", "Home", new { area = "AgencyArea" }) ?? "/AgencyArea/Home";
+}
+
+<div id="officialInvoiceAntiForgery" class="d-none">
+	@Html.AntiForgeryToken()
+</div>
+
+<div class="modal fade invoice-modal"
+	 id="officialInvoiceModal"
+	 tabindex="-1"
+	 aria-labelledby="officialInvoiceModalTitle"
+	 aria-hidden="true"
+	 data-eligible-url="@Url.Action("EligibleTickets", "OfficialInvoices", new { area = "AgencyArea" })"
+	 data-create-url="@Url.Action("CreateMulti", "OfficialInvoices", new { area = "AgencyArea" })"
+	 data-home-url="@homeUrl"
+	 data-is-org="@(isOrganization ? "1" : "0")"
+	 data-preselect="@preselectTicketCode"
+	 data-auto-open="@(autoOpen ? "1" : "0")">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="d-flex align-items-center gap-2">
+					<span class="invoice-modal__header-icon" aria-hidden="true">
+						<iconify-icon icon="fluent-color:document-text-24" width="26" height="26"></iconify-icon>
+					</span>
+					<div>
+						<h5 class="modal-title mb-0" id="officialInvoiceModalTitle">صدور فاکتور رسمی</h5>
+						<small class="text-muted" id="invoiceModalHint">سفرهایی که برای آنها فاکتور رسمی میخواهید را انتخاب کنید</small>
+					</div>
+				</div>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+			</div>
+			<div class="modal-body">
+				<div class="invoice-modal__toolbar" id="invoiceModalToolbar">
+					<div class="invoice-modal__search-wrap">
+						<span class="invoice-modal__search-icon" aria-hidden="true">
+							<iconify-icon icon="fluent:search-24-regular" width="18" height="18"></iconify-icon>
+						</span>
+						<input type="search"
+							   id="invoiceModalSearch"
+							   class="form-control invoice-modal__search"
+							   placeholder="جستجو: کد بلیط، مسافر، مسیر، تاریخ…"
+							   autocomplete="off" />
+					</div>
+					<div class="invoice-modal__filters" role="group" aria-label="بازه بلیط‌ها">
+						<button type="button" class="invoice-modal__filter is-active" data-period="all" id="invoiceModalPeriodAll">همه سفرها</button>
+						<button type="button" class="invoice-modal__filter" data-period="recent" id="invoiceModalPeriodRecent">۳۰ روز اخیر</button>
+						<button type="button" class="invoice-modal__filter" data-period="past" id="invoiceModalPeriodPast">سفرهای قبلی</button>
+					</div>
+					<button type="button"
+							class="btn btn-sm btn-outline-danger invoice-modal__clear"
+							id="invoiceModalClear"
+							title="پاک کردن انتخاب‌ها"
+							aria-label="پاک کردن انتخاب‌ها"
+							disabled>
+						<iconify-icon icon="fluent:dismiss-24-regular" width="16" height="16" aria-hidden="true"></iconify-icon>
+					</button>
+				</div>
+
+				<div id="invoiceModalLoading" class="invoice-modal__loading d-none" aria-live="polite">
+					<div class="invoice-modal__loading-visual" aria-hidden="true">
+						<span class="invoice-modal__loading-ring"></span>
+						<span class="invoice-modal__loading-icon">
+							<iconify-icon icon="fluent-color:receipt-24" width="28" height="28"></iconify-icon>
+						</span>
+					</div>
+					<p class="invoice-modal__loading-title">در حال بارگذاری بلیط‌ها</p>
+					<p class="invoice-modal__loading-text">بلیط‌های جدید و سفرکرده آژانس در حال آماده‌سازی است…</p>
+					<div class="invoice-modal__skeleton" aria-hidden="true">
+						<div class="invoice-modal__skeleton-row"></div>
+						<div class="invoice-modal__skeleton-row"></div>
+						<div class="invoice-modal__skeleton-row"></div>
+					</div>
+				</div>
+
+				<div id="invoiceModalConfirm" class="invoice-modal__confirm d-none" aria-live="polite">
+					<p class="invoice-modal__confirm-question" id="invoiceModalConfirmQuestion">
+						آیا می‌خواهید برای این بلیط فاکتور رسمی صادر شود؟
+					</p>
+					<p class="invoice-modal__confirm-sub" id="invoiceModalConfirmSub">اطلاعات زیر را بررسی کنید و در صورت تأیید، درخواست صدور را بزنید.</p>
+					<div class="invoice-modal__confirm-card" id="invoiceModalConfirmCard"></div>
+				</div>
+
+				<div id="invoiceModalEmpty" class="d-none" aria-live="polite"></div>
+				<div id="invoiceModalList" class="invoice-modal__list d-none" role="list"></div>
+			</div>
+			<div class="modal-footer justify-content-between flex-wrap gap-2">
+				<div class="invoice-modal__footer-summary" id="invoiceModalFooterSummary">
+					<span>انتخاب‌شده: <strong id="invoiceModalCount">0</strong></span>
+					<span>جمع: <strong id="invoiceModalTotal" dir="ltr">0</strong> تومان</span>
+				</div>
+				<div class="d-flex gap-2">
+					<button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+					<button type="button" class="btn btn-primary" id="invoiceModalSubmit" disabled>
+						<iconify-icon class="fc-icon me-1" icon="fluent-color:checkmark-circle-24" width="16" height="16" aria-hidden="true"></iconify-icon>
+						<span id="invoiceModalSubmitLabel">صدور فاکتور</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

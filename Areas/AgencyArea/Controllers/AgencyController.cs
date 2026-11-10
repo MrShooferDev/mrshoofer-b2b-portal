@@ -38,8 +38,104 @@ namespace Application.Areas.AgencyArea
 
       var balanceStr = await _apiClient.GetAccountBalance();
       ViewBag.agancy_balance = balanceStr != null ? (long)Convert.ToDecimal(balanceStr) : 0L;
+      ViewBag.financeLedger = agency == null
+        ? new Application.ViewModels.Agency.AgencyFinanceLedgerViewModel()
+        : await BuildFinanceLedgerAsync(agency.Id);
 
       return View();
+    }
+
+    private async Task<Application.ViewModels.Agency.AgencyFinanceLedgerViewModel> BuildFinanceLedgerAsync(int agencyId)
+    {
+      var charges = await _context.AgencyBalanceCharges.AsNoTracking()
+        .Where(c => EF.Property<int>(c, "AgencyId") == agencyId)
+        .OrderByDescending(c => c.ChargedAt)
+        .Take(100)
+        .ToListAsync();
+
+      var tickets = await _context.Tickets.AsNoTracking()
+        .Where(t => EF.Property<int>(t, "AgencyId") == agencyId)
+        .OrderByDescending(t => t.RegisteredAt)
+        .Take(100)
+        .ToListAsync();
+
+      var pendingCharges = await _context.ZarinpalChargeRequests.AsNoTracking()
+        .Where(z => EF.Property<int>(z, "AgencyId") == agencyId && z.Status != "Success")
+        .OrderByDescending(z => z.CreatedAt)
+        .Take(40)
+        .ToListAsync();
+
+      var entries = new List<Application.ViewModels.Agency.AgencyFinanceEntryViewModel>();
+
+      foreach (var charge in charges)
+      {
+        entries.Add(new Application.ViewModels.Agency.AgencyFinanceEntryViewModel
+        {
+          At = charge.ChargedAt,
+          Kind = Application.ViewModels.Agency.AgencyFinanceKind.Charge,
+          Title = "شارژ اعتبار",
+          Detail = string.IsNullOrWhiteSpace(charge.Description) ? "افزایش موجودی کیف پول" : charge.Description.Trim(),
+          Reference = string.IsNullOrWhiteSpace(charge.PaymentID) ? null : charge.PaymentID.Trim(),
+          AmountToman = charge.Amount,
+          IsCredit = true,
+          StatusLabel = "موفق"
+        });
+      }
+
+      foreach (var ticket in tickets)
+      {
+        var price = ticket.TicketFinalPrice > 0 ? ticket.TicketFinalPrice : ticket.TicketOriginalPrice;
+        if (price <= 0) continue;
+
+        entries.Add(new Application.ViewModels.Agency.AgencyFinanceEntryViewModel
+        {
+          At = ticket.RegisteredAt,
+          Kind = Application.ViewModels.Agency.AgencyFinanceKind.Spend,
+          Title = ticket.IsCancelled ? "هزینه بلیط (لغو شده)" : "هزینه بلیط",
+          Detail = $"{ticket.TripOrigin} به {ticket.TripDestination} — {ticket.Firstname} {ticket.Lastname}",
+          Reference = ticket.TicketCode,
+          AmountToman = price,
+          IsCredit = false,
+          StatusLabel = ticket.IsCancelled ? "لغو شده" : "برداشت"
+        });
+      }
+
+      foreach (var pending in pendingCharges)
+      {
+        var failed = string.Equals(pending.Status, "Failed", StringComparison.OrdinalIgnoreCase);
+        entries.Add(new Application.ViewModels.Agency.AgencyFinanceEntryViewModel
+        {
+          At = pending.PaidAt ?? pending.CreatedAt,
+          Kind = failed
+            ? Application.ViewModels.Agency.AgencyFinanceKind.Failed
+            : Application.ViewModels.Agency.AgencyFinanceKind.Pending,
+          Title = failed ? "شارژ ناموفق" : "شارژ در انتظار",
+          Detail = failed
+            ? "پرداخت درگاه تکمیل نشد"
+            : "درخواست پرداخت زرین‌پال هنوز نهایی نشده است",
+          Reference = pending.Authority,
+          AmountToman = pending.AmountToman,
+          IsCredit = true,
+          StatusLabel = failed ? "ناموفق" : "در انتظار"
+        });
+      }
+
+      var ordered = entries
+        .OrderByDescending(e => e.At)
+        .ThenByDescending(e => e.Reference)
+        .ToList();
+
+      var successfulCharges = ordered.Where(e => e.Kind == Application.ViewModels.Agency.AgencyFinanceKind.Charge).ToList();
+      var spends = ordered.Where(e => e.Kind == Application.ViewModels.Agency.AgencyFinanceKind.Spend).ToList();
+
+      return new Application.ViewModels.Agency.AgencyFinanceLedgerViewModel
+      {
+        Entries = ordered,
+        TotalCharged = successfulCharges.Sum(e => (long)e.AmountToman),
+        TotalSpent = spends.Where(e => e.StatusLabel != "لغو شده").Sum(e => (long)e.AmountToman),
+        ChargeCount = successfulCharges.Count,
+        SpendCount = spends.Count(e => e.StatusLabel != "لغو شده")
+      };
     }
 
     [HttpPost]

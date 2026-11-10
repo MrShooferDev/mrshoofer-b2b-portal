@@ -96,6 +96,231 @@
   }
 }
 
+/* ── Finance ledger (مدیریت اعتبار) ── */
+
+.agency-finance__wallet {
+  margin-bottom: 1.15rem;
+}
+
+.agency-finance__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.1rem;
+}
+
+.agency-finance__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.85rem;
+  background: #fff;
+  min-width: 0;
+}
+
+.agency-finance__stat--credit {
+  border-color: color-mix(in oklch, oklch(0.62 0.14 145) 28%, var(--bs-border-color));
+  background: color-mix(in oklch, oklch(0.62 0.14 145) 6%, white);
+}
+
+.agency-finance__stat--debit {
+  border-color: color-mix(in oklch, oklch(0.62 0.18 25) 24%, var(--bs-border-color));
+  background: color-mix(in oklch, oklch(0.62 0.18 25) 5%, white);
+}
+
+.agency-finance__stat--net {
+  border-color: color-mix(in oklch, var(--bs-primary, #696cff) 22%, var(--bs-border-color));
+  background: color-mix(in oklch, var(--bs-primary, #696cff) 5%, white);
+}
+
+.agency-finance__stat-label {
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+  font-weight: 600;
+}
+
+.agency-finance__stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  color: var(--bs-body-color);
+}
+
+.agency-finance__stat-meta {
+  font-size: 0.72rem;
+  color: var(--bs-secondary-color);
+}
+
+.agency-finance__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.agency-finance__filters {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklch, var(--bs-body-bg, #f5f5f9) 88%, var(--bs-border-color));
+}
+
+.agency-finance__filter {
+  border: 0;
+  background: transparent;
+  color: var(--bs-secondary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.agency-finance__filter:hover {
+  color: var(--bs-body-color);
+}
+
+.agency-finance__filter.is-active {
+  background: #fff;
+  color: var(--bs-body-color);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.agency-finance__filter:focus-visible {
+  outline: 2px solid var(--bs-primary, #696cff);
+  outline-offset: 2px;
+}
+
+.agency-finance__hint {
+  font-size: 0.75rem;
+}
+
+.agency-finance__table-wrap {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.agency-finance__table {
+  margin: 0;
+}
+
+.agency-finance__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in oklch, var(--bs-body-bg, #f5f5f9) 92%, white);
+  border-bottom-width: 1px;
+}
+
+.agency-finance__table tbody tr + tr td {
+  border-top-color: color-mix(in oklch, var(--bs-border-color) 80%, white);
+}
+
+.agency-finance__desc {
+  white-space: normal;
+  min-width: 14rem;
+  max-width: 28rem;
+}
+
+.agency-finance__title {
+  display: block;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.agency-finance__detail {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.agency-finance__ref {
+  display: inline-block;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.4rem;
+  background: color-mix(in oklch, var(--bs-body-bg, #f5f5f9) 85%, white);
+  font-size: 0.78rem;
+  color: var(--bs-body-color);
+}
+
+.agency-finance__amount {
+  display: inline-block;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.agency-finance__amount--credit {
+  color: color-mix(in oklch, oklch(0.48 0.14 145) 90%, black);
+}
+
+.agency-finance__amount--debit {
+  color: color-mix(in oklch, oklch(0.5 0.18 25) 90%, black);
+}
+
+.agency-finance__amount--muted {
+  color: var(--bs-secondary-color);
+  font-weight: 650;
+}
+
+.agency-finance__empty {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  white-space: normal;
+}
+
+.agency-finance__empty-icon {
+  display: inline-flex;
+  margin-bottom: 0.55rem;
+}
+
+@media (max-width: 767.98px) {
+  .agency-finance__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-finance__toolbar {
+    align-items: stretch;
+  }
+
+  .agency-finance__filters {
+    width: 100%;
+  }
+
+  .agency-finance__filter {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .agency-finance__hint {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agency-finance__filter {
+    transition: none;
+  }
+}
+
 /* ── Charge wallet modal ── */
 
 .agency-charge-modal .modal-dialog {

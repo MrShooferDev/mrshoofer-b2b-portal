@@ -1,7 +1,5 @@
-using Application.Areas.AgencyArea.ViewModels.OfficialInvoices;
 using Application.Data;
 using Application.Models;
-using Application.Services;
 using Application.Services.OfficialInvoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +20,11 @@ namespace Application.Areas.AgencyArea.Controllers
             _invoices = invoices;
         }
 
-        public async Task<IActionResult> Index(int page = 1, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Index(
+            int page = 1,
+            int openInvoice = 0,
+            string? ticketcode = null,
+            CancellationToken cancellationToken = default)
         {
             const int pageSize = 20;
             if (page < 1) page = 1;
@@ -32,14 +34,17 @@ namespace Application.Areas.AgencyArea.Controllers
 
             ViewData["Title"] = "فاکتور رسمی";
             ViewBag.IsOrganization = agency.IsOrganization;
+            ViewBag.openInvoiceModal = openInvoice == 1;
+            ViewBag.preselectTicketCode = string.IsNullOrWhiteSpace(ticketcode) ? null : ticketcode.Trim();
 
             var query = _db.OfficialInvoices.AsNoTracking()
                 .Where(i => i.AgencyId == agency.Id);
 
             var totalCount = await query.CountAsync(cancellationToken);
             var uploadedCount = await query.CountAsync(i => i.UploadStatus == OfficialInvoiceUploadStatus.Uploaded, cancellationToken);
-            var pendingCount = totalCount - uploadedCount;
+            var pendingCount = await query.CountAsync(i => i.UploadStatus == OfficialInvoiceUploadStatus.Pending, cancellationToken);
             var buyerCount = await query
+                .Where(i => i.UploadStatus != OfficialInvoiceUploadStatus.Cancelled)
                 .Select(i => i.BuyerNationalId ?? i.BuyerName ?? ("#" + i.Id))
                 .Distinct()
                 .CountAsync(cancellationToken);
@@ -54,6 +59,7 @@ namespace Application.Areas.AgencyArea.Controllers
             if (page > totalPages) page = totalPages;
 
             var list = await query
+                .Include(i => i.InvoiceTickets)
                 .OrderByDescending(i => i.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -74,13 +80,13 @@ namespace Application.Areas.AgencyArea.Controllers
             return View(list);
         }
 
+        /// <summary>Legacy entry: opens the multi-select invoice modal on this page.</summary>
         [HttpGet]
         public async Task<IActionResult> Create(string? ticketcode, CancellationToken cancellationToken = default)
         {
             var agency = await ResolveAgencyAsync(cancellationToken);
             if (agency == null) return RedirectToAction("Login", "Auth");
 
-            // Organization invoices require legal/financial profile; agency (seller) invoices do not.
             if (agency.IsOrganization && !agency.HasInvoiceFinancialInfo)
             {
                 TempData["InvoiceBlocked"] = true;
@@ -90,31 +96,11 @@ namespace Application.Areas.AgencyArea.Controllers
                 return Redirect(Url.Action("Index", "Agency", new { area = "AgencyArea" }) + "#financial");
             }
 
-            if (string.IsNullOrWhiteSpace(ticketcode))
+            return RedirectToAction(nameof(Index), new
             {
-                TempData["Error"] = "فاکتور رسمی فقط از روی بلیط خریداری‌شده و لغوشده‌نشده صادر می‌شود. از فهرست بلیط‌ها اقدام کنید.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var (status, ticket, existing) = await _invoices.ResolveEligibleTicketAsync(ticketcode, agency.Id, cancellationToken);
-            if (status == TicketInvoiceEligibility.AlreadyInvoiced && existing != null)
-            {
-                TempData["Success"] = "برای این بلیط قبلاً فاکتور صادر شده است.";
-                return RedirectToAction(nameof(Print), new { id = existing.Id });
-            }
-            if (status != TicketInvoiceEligibility.Ok || ticket == null)
-            {
-                TempData["Error"] = EligibilityMessage(status);
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewData["Title"] = "صدور فاکتور رسمی";
-            ViewData["SerialPreview"] = _invoices.GetSerialSettings().Preview;
-            ViewBag.IsOrganization = agency.IsOrganization;
-
-            var draft = new OfficialInvoice { AgencyId = agency.Id };
-            await _invoices.PrefillFromTicketAsync(draft, ticket, agency.Id);
-            return View(MapInvoiceToForm(draft));
+                openInvoice = 1,
+                ticketcode = string.IsNullOrWhiteSpace(ticketcode) ? null : ticketcode.Trim()
+            });
         }
 
         [HttpPost]
@@ -134,23 +120,10 @@ namespace Application.Areas.AgencyArea.Controllers
                 return Redirect(Url.Action("Index", "Agency", new { area = "AgencyArea" }) + "#financial");
             }
 
-            var (status, ticket, existing) = await _invoices.ResolveEligibleTicketAsync(ticketCode, agency.Id, cancellationToken);
-            if (status == TicketInvoiceEligibility.AlreadyInvoiced && existing != null)
-            {
-                TempData["Success"] = "برای این بلیط قبلاً فاکتور صادر شده است.";
-                return RedirectToAction(nameof(Print), new { id = existing.Id });
-            }
-            if (status != TicketInvoiceEligibility.Ok || ticket == null)
-            {
-                TempData["Error"] = EligibilityMessage(status);
-                return RedirectToAction(nameof(Index));
-            }
-
-            var invoice = new OfficialInvoice { AgencyId = agency.Id, CreatedBy = User.Identity?.Name };
-            await _invoices.PrefillFromTicketAsync(invoice, ticket, agency.Id);
             try
             {
-                var saved = await _invoices.CreateAsync(invoice, cancellationToken);
+                var saved = await _invoices.CreateFromTicketsAsync(
+                    agency.Id, new[] { ticketCode }, User.Identity?.Name, cancellationToken);
                 TempData["Success"] = "فاکتور " + saved.SerialNumber + " صادر شد.";
                 return RedirectToAction(nameof(Print), new { id = saved.Id });
             }
@@ -162,17 +135,123 @@ namespace Application.Areas.AgencyArea.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> EligibleTickets(CancellationToken cancellationToken = default)
+        {
+            var agency = await ResolveAgencyAsync(cancellationToken);
+            if (agency == null) return Unauthorized();
+
+            if (agency.IsOrganization && !agency.HasInvoiceFinancialInfo)
+            {
+                return Json(new
+                {
+                    ok = false,
+                    needsFinancial = true,
+                    message = "برای صدور فاکتور رسمی ابتدا اطلاعات مالی آژانس را تکمیل کنید.",
+                    legalProfileUrl = Url.Action("Index", "Agency", new { area = "AgencyArea" }) + "#financial"
+                });
+            }
+
+            var items = await _invoices.ListEligibleTicketsAsync(agency.Id, agency.IsOrganization, cancellationToken);
+            var eligibleCount = items.Count(t => t.Eligible);
+            return Json(new
+            {
+                ok = true,
+                isOrganization = agency.IsOrganization,
+                totalCount = items.Count,
+                eligibleCount,
+                tickets = items.Select(t => new
+                {
+                    t.TicketId,
+                    t.TicketCode,
+                    t.PassengerName,
+                    t.NationalId,
+                    t.RouteLabel,
+                    t.ServiceName,
+                    t.AmountToman,
+                    registeredAt = t.RegisteredAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    t.Eligible,
+                    t.BlockReason,
+                    t.ActiveInvoiceId,
+                    t.ActiveInvoiceSerial,
+                    activeInvoiceStatus = t.ActiveInvoiceStatus?.ToString()
+                })
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateMulti([FromForm] List<string>? ticketCodes, CancellationToken cancellationToken = default)
+        {
+            var agency = await ResolveAgencyAsync(cancellationToken);
+            if (agency == null) return Unauthorized();
+
+            if (agency.IsOrganization && !agency.HasInvoiceFinancialInfo)
+            {
+                return Json(new
+                {
+                    ok = false,
+                    needsFinancial = true,
+                    message = "برای صدور فاکتور رسمی ابتدا اطلاعات مالی آژانس را تکمیل کنید.",
+                    legalProfileUrl = Url.Action("Index", "Agency", new { area = "AgencyArea" }) + "#financial"
+                });
+            }
+
+            try
+            {
+                var saved = await _invoices.CreateFromTicketsAsync(
+                    agency.Id, ticketCodes ?? new List<string>(), User.Identity?.Name, cancellationToken);
+                return Json(new
+                {
+                    ok = true,
+                    id = saved.Id,
+                    serial = saved.SerialNumber,
+                    printUrl = Url.Action(nameof(Print), new { id = saved.Id }),
+                    message = "فاکتور " + saved.SerialNumber + " صادر شد."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Json(new { ok = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelPending(int id, CancellationToken cancellationToken = default)
+        {
+            var agency = await ResolveAgencyAsync(cancellationToken);
+            if (agency == null) return RedirectToAction("Login", "Auth");
+
+            try
+            {
+                var invoice = await _invoices.CancelPendingAsync(id, agency.Id, cancellationToken);
+                if (invoice == null)
+                {
+                    TempData["Error"] = "فاکتور پیدا نشد.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                TempData["Success"] = $"درخواست فاکتور {invoice.SerialNumber} لغو شد. بلیط‌ها دوباره قابل صدور هستند.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken = default)
         {
             var agency = await ResolveAgencyAsync(cancellationToken);
             if (agency == null) return RedirectToAction("Login", "Auth");
 
             var invoice = await _db.OfficialInvoices.AsNoTracking()
+                .Include(i => i.InvoiceTickets)
                 .FirstOrDefaultAsync(i => i.Id == id && i.AgencyId == agency.Id, cancellationToken);
             if (invoice == null) return NotFound();
 
-            // Organization prints use the live agency legal profile as buyer.
-            // Agency (seller) invoices keep the passenger buyer captured at issue time.
             if (agency.IsOrganization)
                 ApplyAgencyBuyerProfile(invoice, agency);
 
@@ -216,46 +295,6 @@ namespace Application.Areas.AgencyArea.Controllers
             return await _db.Agencies.AsNoTracking()
                 .Include(a => a.IdentityUser)
                 .FirstOrDefaultAsync(a => a.IdentityUser.UserName == username, cancellationToken);
-        }
-
-        private static string EligibilityMessage(TicketInvoiceEligibility status) => status switch
-        {
-            TicketInvoiceEligibility.Cancelled => "برای بلیط لغوشده نمی‌توان فاکتور رسمی صادر کرد.",
-            TicketInvoiceEligibility.AlreadyInvoiced => "برای این بلیط قبلاً فاکتور صادر شده است.",
-            _ => "این بلیط متعلق به آژانس شما نیست، پیدا نشد، یا قابل صدور فاکتور نیست."
-        };
-
-        private static OfficialInvoiceCreateViewModel MapInvoiceToForm(OfficialInvoice invoice)
-        {
-            var today = DateTime.Today.ToPersianDate();
-            return new OfficialInvoiceCreateViewModel
-            {
-                TicketCode = invoice.TicketCode,
-                InvoiceDateShamsi = $"{today.Year:0000}/{today.Month:00}/{today.Day:00}",
-                BuyerName = invoice.BuyerName,
-                BuyerEconomicNo = invoice.BuyerEconomicNo,
-                BuyerRegistrationNo = invoice.BuyerRegistrationNo,
-                BuyerProvince = invoice.BuyerProvince,
-                BuyerCounty = invoice.BuyerCounty,
-                BuyerCity = invoice.BuyerCity,
-                BuyerPostalCode = invoice.BuyerPostalCode,
-                BuyerAddress = invoice.BuyerAddress,
-                BuyerNationalId = invoice.BuyerNationalId,
-                BuyerPhone = invoice.BuyerPhone,
-                BuyerFax = invoice.BuyerFax,
-                PaymentIsCash = invoice.PaymentIsCash,
-                Notes = invoice.Notes,
-                Lines = invoice.Lines.Select(l => new OfficialInvoiceLineForm
-                {
-                    ItemCode = l.ItemCode,
-                    Description = l.Description,
-                    Quantity = l.Quantity,
-                    Unit = l.Unit,
-                    UnitAmountTomans = l.UnitAmountRials / 10,
-                    DiscountTomans = l.DiscountRials / 10,
-                    VatTomans = l.VatRials / 10
-                }).ToList()
-            };
         }
     }
 }

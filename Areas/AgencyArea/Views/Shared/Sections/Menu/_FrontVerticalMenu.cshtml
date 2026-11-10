@@ -135,7 +135,11 @@
     }
 
     var departure = trip.RegisteredAt;
-    if (orsTripInfoBudget > 0
+    var isDevSampleTrip = !string.IsNullOrWhiteSpace(trip.Tripcode)
+      && trip.Tripcode.StartsWith("DEV-", StringComparison.OrdinalIgnoreCase);
+    // Dev-seeded trip codes are not on ORS — skip the remote call (avoids 400 spam).
+    if (!isDevSampleTrip
+        && orsTripInfoBudget > 0
         && !string.IsNullOrWhiteSpace(trip.Tripcode)
         && menuAgency != null
         && !string.IsNullOrWhiteSpace(menuAgency.ORSAPI_token))
@@ -171,6 +175,10 @@
     string Origin,
     string Destination,
     string? Car,
+    string? Service,
+    string? TicketCode,
+    string? Phone,
+    int? AmountToman,
     string StatusKey,
     string StatusLabel,
     string? Href,
@@ -191,6 +199,10 @@
       "تهران",
       "کرج",
       "سدان",
+      "سواری دربستی",
+      "DEMO-TKT-001",
+      null,
+      1_250_000,
       "completed",
       "انجام شده",
       ticketsHref,
@@ -202,6 +214,10 @@
       "تهران",
       "اصفهان",
       "ون هایس",
+      "ون تشریفات",
+      "DEMO-TKT-002",
+      null,
+      4_200_000,
       "registered",
       "رزرو شده",
       ticketsHref,
@@ -213,6 +229,10 @@
       "تهران",
       "فرودگاه امام",
       "سدان",
+      "ترانسفر فرودگاهی",
+      "DEMO-TKT-003",
+      null,
+      1_200_000,
       "confirmed",
       "تایید شده",
       ticketsHref,
@@ -224,6 +244,10 @@
       "کرج",
       "تهران",
       "ون",
+      "سواری دربستی",
+      "DEMO-TKT-004",
+      null,
+      980_000,
       "departing",
       "نزدیک به حرکت",
       ticketsHref,
@@ -238,6 +262,10 @@
       "تهران",
       "قم",
       "سدان",
+      "سواری دربستی",
+      "DEMO-TKT-005",
+      null,
+      1_450_000,
       "in-progress",
       "در حال انجام",
       ticketsHref,
@@ -301,6 +329,10 @@
         trip.TripOrigin,
         trip.TripDestination,
         trip.CarName,
+        trip.ServiceName,
+        trip.TicketCode,
+        trip.PhoneNumber,
+        trip.TicketFinalPrice > 0 ? trip.TicketFinalPrice : null,
         statusKey,
         statusLabel,
         detailHref,
@@ -496,7 +528,23 @@
                 <li>
                   <a class="front-side-menu-upcoming__item@(itemMods)"
                      href="@href"
-                     title="@trip.Passenger — @routeLabel">
+                     title="@trip.Passenger — @routeLabel"
+                     data-open-ticket-preview
+                     data-passenger="@trip.Passenger"
+                     data-origin="@trip.Origin"
+                     data-destination="@trip.Destination"
+                     data-route="@routeLabel"
+                     data-at="@trip.At.ToString("o")"
+                     data-car="@trip.Car"
+                     data-service="@trip.Service"
+                     data-ticket-code="@trip.TicketCode"
+                     data-phone="@trip.Phone"
+                     data-amount-toman="@(trip.AmountToman?.ToString() ?? "")"
+                     data-status-key="@trip.StatusKey"
+                     data-status-label="@trip.StatusLabel"
+                     data-progress-percent="@(trip.ProgressPercent?.ToString() ?? "")"
+                     data-progress-arrival="@(trip.ProgressArrival?.ToString("o") ?? "")"
+                     data-detail-url="@href">
                     @if (isCompletedToday)
                     {
                       <span class="front-side-menu-upcoming__tick" aria-hidden="true">

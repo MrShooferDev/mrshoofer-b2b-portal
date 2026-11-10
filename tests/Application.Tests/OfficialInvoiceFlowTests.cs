@@ -99,22 +99,20 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
   public async Task Agency_creates_invoice_from_uncancelled_ticket_with_autofill_and_pending_status()
   {
     await SeedFinancialProfileAsync();
-    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 75_000);
+    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 75_000, code: "TKT-OK-001");
     var agencyCtrl = CreateAgencyController();
 
     var get = await agencyCtrl.Create(ticket.TicketCode);
-    var getView = Assert.IsType<ViewResult>(get);
-    var vm = Assert.IsType<Application.Areas.AgencyArea.ViewModels.OfficialInvoices.OfficialInvoiceCreateViewModel>(getView.Model);
-    Assert.Equal(ticket.TicketCode, vm.TicketCode);
-    Assert.Equal("Invoice Agency", vm.BuyerName);
-    Assert.Equal(75_000, vm.Lines.Single().UnitAmountTomans);
-    Assert.Equal(OfficialInvoiceSeller.MoodianNote, vm.Notes);
+    var getRedirect = Assert.IsType<RedirectToActionResult>(get);
+    Assert.Equal(nameof(AgencyOfficialInvoicesController.Index), getRedirect.ActionName);
+    Assert.Equal(1, getRedirect.RouteValues?["openInvoice"]);
 
     var post = await agencyCtrl.CreateConfirm(ticket.TicketCode);
     var redirect = Assert.IsType<RedirectToActionResult>(post);
     Assert.Equal(nameof(AgencyOfficialInvoicesController.Print), redirect.ActionName);
 
-    var invoice = await NewDb().OfficialInvoices.SingleAsync();
+    var db = NewDb();
+    var invoice = await db.OfficialInvoices.Include(i => i.InvoiceTickets).SingleAsync();
     Assert.Equal(ticket.Id, invoice.TicketId);
     Assert.Equal(ticket.TicketCode, invoice.TicketCode);
     Assert.Equal("Invoice Agency", invoice.BuyerName);
@@ -123,6 +121,8 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
     Assert.Equal(OfficialInvoiceUploadStatusText.Pending, invoice.UploadStatusText);
     Assert.Equal(OfficialInvoiceSeller.MoodianNote, invoice.Notes);
     Assert.Equal("1-2209", invoice.SerialNumber);
+    Assert.Single(invoice.InvoiceTickets);
+    Assert.Equal(ticket.Id, invoice.InvoiceTickets.Single().TicketId);
     Assert.Contains("۵ روز کاری", OfficialInvoiceSeller.MoodianNote);
     Assert.Contains("سامانه مودیان", OfficialInvoiceSeller.MoodianNote);
   }
@@ -130,10 +130,9 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
   [Fact]
   public async Task Agency_cannot_create_invoice_without_financial_profile()
   {
-    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 40_000);
+    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 40_000, code: "TKT-OK-001");
     var agencyCtrl = CreateAgencyController();
 
-    // Organization panels gate invoices behind financial profile (#financial on Agency index).
     var get = await agencyCtrl.Create(ticket.TicketCode);
     var getRedirect = Assert.IsType<RedirectResult>(get);
     Assert.Contains("#financial", getRedirect.Url, StringComparison.Ordinal);
@@ -161,24 +160,8 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
     agency.Address = "خیابان نمونه";
     await db.SaveChangesAsync();
 
-    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 50_000);
-    var agencyCtrl = CreateAgencyController();
-
-    var get = await agencyCtrl.Create(ticket.TicketCode);
-    var getView = Assert.IsType<ViewResult>(get);
-    var vm = Assert.IsType<Application.Areas.AgencyArea.ViewModels.OfficialInvoices.OfficialInvoiceCreateViewModel>(getView.Model);
-    Assert.Equal("12345678901", vm.BuyerEconomicNo);
-    Assert.Equal("998877", vm.BuyerRegistrationNo);
-    Assert.Equal("14000000001", vm.BuyerNationalId);
-    Assert.Equal("02188990011", vm.BuyerPhone);
-    Assert.Equal("02188990012", vm.BuyerFax);
-    Assert.Equal("تهران", vm.BuyerProvince);
-    Assert.Equal("تهران", vm.BuyerCounty);
-    Assert.Equal("تهران", vm.BuyerCity);
-    Assert.Equal("1234567890", vm.BuyerPostalCode);
-    Assert.Equal("خیابان نمونه", vm.BuyerAddress);
-
-    await agencyCtrl.CreateConfirm(ticket.TicketCode);
+    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 50_000, code: "TKT-OK-001");
+    await CreateAgencyController().CreateConfirm(ticket.TicketCode);
     var invoice = await NewDb().OfficialInvoices.SingleAsync();
     Assert.Equal("12345678901", invoice.BuyerEconomicNo);
     Assert.Equal("998877", invoice.BuyerRegistrationNo);
@@ -193,12 +176,11 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
   public async Task Agency_cannot_create_invoice_for_cancelled_ticket()
   {
     await SeedFinancialProfileAsync();
-    var ticket = await SeedTicketAsync(cancelled: true, priceTomans: 40_000);
+    var ticket = await SeedTicketAsync(cancelled: true, priceTomans: 40_000, code: "TKT-CANCEL");
     var agencyCtrl = CreateAgencyController();
 
     var get = await agencyCtrl.Create(ticket.TicketCode);
     Assert.Equal(nameof(AgencyOfficialInvoicesController.Index), Assert.IsType<RedirectToActionResult>(get).ActionName);
-    Assert.Equal(0, await NewDb().OfficialInvoices.CountAsync());
 
     var post = await agencyCtrl.CreateConfirm(ticket.TicketCode);
     Assert.Equal(nameof(AgencyOfficialInvoicesController.Index), Assert.IsType<RedirectToActionResult>(post).ActionName);
@@ -206,10 +188,62 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
   }
 
   [Fact]
+  public async Task Eligible_list_returns_recent_and_past_active_tickets_excluding_cancelled()
+  {
+    await SeedFinancialProfileAsync();
+    var older = await SeedTicketAsync(cancelled: false, priceTomans: 10_000, code: "TKT-OLD");
+    await Task.Delay(5);
+    var newer = await SeedTicketAsync(cancelled: false, priceTomans: 20_000, code: "TKT-NEW");
+    await SeedTicketAsync(cancelled: true, priceTomans: 30_000, code: "TKT-CXL");
+    var past = await SeedTicketAsync(cancelled: false, priceTomans: 15_000, code: "TKT-PAST");
+
+    var db = NewDb();
+    var old = await db.Tickets.SingleAsync(t => t.Id == older.Id);
+    old.RegisteredAt = DateTime.Now.AddMinutes(-10);
+    var neu = await db.Tickets.SingleAsync(t => t.Id == newer.Id);
+    neu.RegisteredAt = DateTime.Now;
+    var pastTicket = await db.Tickets.SingleAsync(t => t.Id == past.Id);
+    pastTicket.RegisteredAt = DateTime.Now.AddDays(-90);
+    await db.SaveChangesAsync();
+
+    var list = await new OfficialInvoiceService(NewDb(), _env)
+      .ListEligibleTicketsAsync(_agency.Id, isOrganization: true);
+
+    Assert.Equal(3, list.Count);
+    Assert.DoesNotContain(list, t => t.TicketCode == "TKT-CXL");
+    Assert.Contains(list, t => t.TicketCode == "TKT-PAST");
+    Assert.Equal("TKT-NEW", list[0].TicketCode);
+    Assert.True(list.All(t => t.Eligible));
+  }
+
+  [Fact]
+  public async Task Agency_can_create_multi_ticket_invoice_and_cancel_pending()
+  {
+    await SeedFinancialProfileAsync();
+    var t1 = await SeedTicketAsync(cancelled: false, priceTomans: 10_000, code: "TKT-M-1");
+    var t2 = await SeedTicketAsync(cancelled: false, priceTomans: 20_000, code: "TKT-M-2");
+
+    var service = new OfficialInvoiceService(NewDb(), _env);
+    var invoice = await service.CreateFromTicketsAsync(_agency.Id, new[] { t1.TicketCode, t2.TicketCode }, "tester");
+    Assert.Equal(300_000, invoice.PayableRials);
+    Assert.Equal(2, invoice.InvoiceTickets.Count);
+
+    var again = await service.ResolveEligibleTicketAsync(t1.TicketCode, _agency.Id);
+    Assert.Equal(TicketInvoiceEligibility.AlreadyInvoiced, again.Status);
+
+    var cancelled = await service.CancelPendingAsync(invoice.Id, _agency.Id);
+    Assert.NotNull(cancelled);
+    Assert.Equal(OfficialInvoiceUploadStatus.Cancelled, cancelled!.UploadStatus);
+
+    var free = await service.ResolveEligibleTicketAsync(t1.TicketCode, _agency.Id);
+    Assert.Equal(TicketInvoiceEligibility.Ok, free.Status);
+  }
+
+  [Fact]
   public async Task Admin_can_mark_uploaded_and_agency_has_no_status_change_action()
   {
     await SeedFinancialProfileAsync();
-    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 10_000);
+    var ticket = await SeedTicketAsync(cancelled: false, priceTomans: 10_000, code: "TKT-OK-001");
     await CreateAgencyController().CreateConfirm(ticket.TicketCode);
     var invoice = await NewDb().OfficialInvoices.SingleAsync();
     Assert.Equal(OfficialInvoiceUploadStatus.Pending, invoice.UploadStatus);
@@ -255,13 +289,13 @@ public class OfficialInvoiceFlowTests : IAsyncLifetime
     await db.SaveChangesAsync();
   }
 
-  private async Task<Ticket> SeedTicketAsync(bool cancelled, int priceTomans)
+  private async Task<Ticket> SeedTicketAsync(bool cancelled, int priceTomans, string code)
   {
     var db = NewDb();
     var agency = await db.Agencies.Include(a => a.IdentityUser).SingleAsync(a => a.Id == _agency.Id);
     var ticket = new Ticket
     {
-      TicketCode = cancelled ? "TKT-CANCEL" : "TKT-OK-001",
+      TicketCode = code,
       Tripcode = "TRIP-1",
       Firstname = "Ali",
       Lastname = "Testi",
